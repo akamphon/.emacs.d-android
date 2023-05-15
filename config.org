@@ -41,6 +41,11 @@
 (evil-collection-init)
 )
 
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1)
+)
+
  ;; Using garbage magic hack.
   (use-package gcmh
     :config
@@ -138,7 +143,8 @@
         "f S"   '(write-file :which-key "Save file as...")
         "f U"   '(sudo-edit :which-key "Sudo edit file")
         "o m"   '(mu4e :which-key "mu4e mode")
- )
+        "b b"   '(consult-buffer :which-key "Switch Buffer")
+)
 
  (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
 
@@ -259,4 +265,7 @@
          epa-pinentry-mode 'ask)
    (pinentry-start)
    )
+
+ (setq org-highlight-latex-and-related '(native script entities))
+ (setq org-src-fontify-natively t)
 #+END_SRC
