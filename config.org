@@ -106,6 +106,10 @@
    org-confirm-babel-evaluate nil
    org-edit-src-content-indentation 0)
 
+
+ (use-package smartparens)
+ (require 'smartparens-config)
+
  (use-package which-key
    :init
    (setq which-key-side-window-location 'bottom
@@ -264,8 +268,11 @@
    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
          epa-pinentry-mode 'ask)
    (pinentry-start)
+   (setq mu4e-confirm-quit nil)
    )
 
  (setq org-highlight-latex-and-related '(native script entities))
- (setq org-src-fontify-natively t)
+ (add-hook 'org-mode-hook #'smartparens-mode)
+ (add-hook 'latex-mode-hook #'smartparens-mode)
+ ;;(setq org-src-fontify-natively t)
 #+END_SRC
