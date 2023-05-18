@@ -4,6 +4,8 @@
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
 
+** Setting up straight.el
+
 #+BEGIN_SRC emacs-lisp
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -17,6 +19,11 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+#+END_SRC
+
+** *NOT* setting up package.el
+
+#+BEGIN_SRC emacs-lisp
 ;; ;;(add-to-list 'load-path "/usr/share/emacs/site-lisp")
 ;; (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
 ;; ;; Set up package.el to work with MELPA
@@ -27,7 +34,11 @@
 ;; ;;(package-refresh-contents)
 ;; ;; ensure the packages are installed
 ;; (setq use-package-always-ensure t)
-;; Enable Evil
+#+END_SRC
+
+** Enable Evil
+
+#+BEGIN_SRC emacs-lisp
 (setq straight-use-package-by-default t)
 (use-package evil
 :init
@@ -45,7 +56,11 @@
   :config
   (global-evil-surround-mode 1)
 )
+#+END_SRC
 
+** Tuning emacs's (or is it emacs') performance
+
+#+BEGIN_SRC emacs-lisp
  ;; Using garbage magic hack.
   (use-package gcmh
     :config
@@ -104,12 +119,24 @@
  (setq org-src-fontify-natively t
    org-src-tab-acts-natively t
    org-confirm-babel-evaluate nil
-   org-edit-src-content-indentation 0)
+   org-edit-src-content-indentation 0
+   org-highlight-latex-and-related '(native script entities))
+#+END_SRC
 
+** Smartparens
 
+For parentheses and paired up things.
+
+#+BEGIN_SRC emacs-lisp
  (use-package smartparens)
  (require 'smartparens-config)
+#+END_SRC
 
+** Which-key
+
+Letting me know which keys do what.
+
+#+BEGIN_SRC emacs-lisp
  (use-package which-key
    :init
    (setq which-key-side-window-location 'bottom
@@ -123,13 +150,27 @@
          which-key-idle-delay 0.8
          which-key-max-description-length 25
          which-key-allow-imprecise-window-fit t
-         which-key-separator " → " ))
- (which-key-mode)
+         which-key-separator " → " )
+   :config
+   (which-key-mode)
+)
+#+END_SRC
 
+** Ui Settings
+
+Get rid of menu, tool, and scroll bars.
+
+#+BEGIN_SRC emacs-lisp
  (menu-bar-mode -1)
  (tool-bar-mode -1)
  (scroll-bar-mode -1)
+#+END_SRC
 
+** General Keybindings
+
+File manager, accessing email, bla bla bla
+
+#+BEGIN_SRC emacs-lisp
  (use-package general
    :config
    (general-evil-setup t))
@@ -151,7 +192,13 @@
 )
 
  (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
+#+END_SRC
 
+** Completion?
+
+I need to learn more about this. Doesn't really work properly yet.
+
+#+BEGIN_SRC emacs-lisp
  (use-package vertico
  :init
  (vertico-mode)
@@ -250,29 +297,70 @@
    :ensure t ; only need to install it, embark loads it after consult if found
    :hook
    (embark-collect-mode . consult-preview-at-point-mode))
+#+END_SRC
 
- (straight-use-package '(mu4e :host github :repo "emacsmirror/mu4e" :files (:defaults "mu4e/*.el")))
+** Git Settings
 
+#+BEGIN_SRC emacs-lisp
  (use-package magit)
+#+END_SRC
 
+** Email Settings
+
+#+BEGIN_SRC emacs-lisp
  (require 'smtpmail)
  (setq message-send-mail-function 'smtpmail-send-it
        smtpmail-smtp-user "sup@engr.tu.ac.th"
+       user-full-name "Sappinandana Akamphon"
+       user-mail-address "sup@engr.tu.ac.th"
        smtpmail-default-smtp-server "smtp.gmail.com"
        smtpmail-smtp-server "smtp.gmail.com"
-       smtpmail-smtp-service 587)
+       smtpmail-smtp-service 587
+)
 
  (use-package pinentry)
+
+ (straight-use-package '(mu4e :host github :repo "emacsmirror/mu4e" :files (:defaults "mu4e/*.el")))
 
  (with-eval-after-load "mu4e"
    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
          epa-pinentry-mode 'ask)
    (pinentry-start)
-   (setq mu4e-confirm-quit nil)
-   )
+   (setq mu4e-confirm-quit nil
+         mu4e-compose-context-policy 'always-ask)
+)
+#+END_SRC
 
- (setq org-highlight-latex-and-related '(native script entities))
- (add-hook 'org-mode-hook #'smartparens-mode)
- (add-hook 'latex-mode-hook #'smartparens-mode)
- ;;(setq org-src-fontify-natively t)
+** Font Settings
+
+#+BEGIN_SRC emacs-lisp
+(set-fontset-font t 'thai "Loma-11")
+(set-face-attribute 'default nil
+  :font "Source Code Pro"
+  :weight 'medium)
+(set-face-attribute 'variable-pitch nil
+  :font "Source Code Pro"
+  :weight 'medium)
+(set-face-attribute 'fixed-pitch nil
+  :font "Source Code Pro"
+  :weight 'medium)
+#+END_SRC
+
+** Latex Settings
+#+BEGIN_SRC emacs-lisp
+(use-package tex :straight auctex)
+
+(general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
+(general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
+(general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
+(general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
+(setq latex-build-command "LatexMk")
+(defun latex/build ()
+  (interactive)
+  (progn
+    (let ((TeX-save-query nil))
+      (TeX-save-document (TeX-master-file)))
+    (TeX-command TeX-command-default 'TeX-master-file -1)
+      )
+    )
 #+END_SRC
