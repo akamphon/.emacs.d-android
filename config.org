@@ -47,10 +47,10 @@
 #+BEGIN_SRC emacs-lisp
 (setq straight-use-package-by-default t)
 (use-package evil
-:init
-(setq evil-want-keybinding nil)
-:config
-(evil-mode 1)
+  :init
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1)
 )
 
 (use-package evil-collection
@@ -62,6 +62,18 @@
   :config
   (global-evil-surround-mode 1)
 )
+
+(use-package evil-snipe
+  :commands evil-snipe-local-mode evil-snipe-override-local-mode
+  :hook (doom-first-input . evil-snipe-override-mode)
+  :hook (doom-first-input . evil-snipe-mode)
+  :init
+  (setq evil-snipe-smart-case t
+        evil-snipe-scope 'line
+        evil-snipe-repeat-scope 'visible
+        evil-snipe-char-fold t)
+)
+
 #+END_SRC
 
 ** Tuning emacs's (or is it emacs') performance
