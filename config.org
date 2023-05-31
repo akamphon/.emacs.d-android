@@ -23,8 +23,20 @@
 
 ** Org 
 #+BEGIN_SRC emacs-lisp
-(use-package org)
+(use-package org
+  :config
+  (setq org-src-fontify-natively t
+    org-src-tab-acts-natively t
+    org-confirm-babel-evaluate nil
+    org-edit-src-content-indentation 0
+    org-highlight-latex-and-related '(native script entities))
+  (add-hook 'org-mode-hook #'visual-line-mode)
+)
 (use-package org-contrib)
+(use-package org-bullets
+  :config
+  (add-hook 'org-mode-hook #'org-bullets-mode)
+)
 #+END_SRC
 
 ** *NOT* setting up package.el
@@ -79,63 +91,51 @@
 ** Tuning emacs's (or is it emacs') performance
 
 #+BEGIN_SRC emacs-lisp
- ;; Using garbage magic hack.
-  (use-package gcmh
-    :config
-    (gcmh-mode 1))
- ;; Setting garbage collection threshold
- (setq gc-cons-threshold 402653184
-       gc-cons-percentage 0.6)
+;; Using garbage magic hack.
+ (use-package gcmh
+   :config
+   (gcmh-mode 1))
+;; Setting garbage collection threshold
+(setq gc-cons-threshold 402653184
+      gc-cons-percentage 0.6)
 
- ;; Profile emacs startup
- (add-hook 'emacs-startup-hook
-           (lambda ()
-             (message "*** Emacs loaded in %s with %d garbage collections."
-                      (format "%.2f seconds"
-                              (float-time
-                               (time-subtract after-init-time before-init-time)))
-                      gcs-done)))
+;; Profile emacs startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
 
- ;; Silence compiler warnings as they can be pretty disruptive
- (if (boundp 'comp-deferred-compilation)
-     (setq comp-deferred-compilation nil)
-     (setq native-comp-deferred-compilation nil))
+;; Silence compiler warnings as they can be pretty disruptive
+(setq native-comp-async-report-warnings-erros nil)
 
- (use-package doom-themes
- :config
- (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-       doom-themes-enable-italic t) ; if nil, italics is universally disabled
- (load-theme 'doom-one t)
- )
+(use-package doom-themes
+:config
+(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+(load-theme 'doom-one t)
+)
 
- (use-package dashboard
- :init      ;; tweak dashboard config before loading it
- (setq dashboard-set-heading-icons t)
- (setq dashboard-set-file-icons t)
- (setq dashboard-banner-logo-title "Dorkmacs")
- (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
- ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
- (setq dashboard-center-content nil) ;; set to 't' for centered content
- (setq dashboard-items '((recents . 5)
-   		      (agenda . 5 )))
- :config
- (dashboard-setup-startup-hook)
- (dashboard-modify-heading-icons '((recents . "file-text")
-   			  (bookmarks . "book"))))
- (use-package org-bullets
- :config
- (add-hook 'org-mode-hook #'org-bullets-mode)
- )
+(use-package dashboard
+:init      ;; tweak dashboard config before loading it
+(setq dashboard-set-heading-icons t)
+(setq dashboard-set-file-icons t)
+(setq dashboard-banner-logo-title "Dorkmacs")
+(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
+(setq dashboard-center-content nil) ;; set to 't' for centered content
+(setq dashboard-items '((recents . 5)
+   		     (agenda . 5 )))
+:config
+(dashboard-setup-startup-hook)
+(dashboard-modify-heading-icons '((recents . "file-text")
+   			 (bookmarks . "book"))))
 
- (use-package all-the-icons
- :ensure t
- )
-
- (setq org-src-fontify-natively t
-   org-src-tab-acts-natively t
-   org-confirm-babel-evaluate nil
-   org-edit-src-content-indentation 0
-   org-highlight-latex-and-related '(native script entities))
+(use-package all-the-icons
+:ensure t
+)
 #+END_SRC
 
 ** Smartparens
@@ -143,8 +143,8 @@
 For parentheses and paired up things.
 
 #+BEGIN_SRC emacs-lisp
- (use-package smartparens)
- (require 'smartparens-config)
+(use-package smartparens)
+(require 'smartparens-config)
 #+END_SRC
 
 ** Which-key
@@ -408,8 +408,10 @@ I need to learn more about this. Doesn't really work properly yet.
 
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
-(use-package tex :straight auctex)
-
+(use-package tex
+  :straight auctex
+  :config
+  (add-hook 'latex-mode-hook #'visual-line-mode)
 (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
 (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
 (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
@@ -423,6 +425,8 @@ I need to learn more about this. Doesn't really work properly yet.
     (TeX-command TeX-command-default 'TeX-master-file -1)
       )
     )
+)
+
 #+END_SRC
 
 ** Bibliography Packages
@@ -431,10 +435,17 @@ I need to learn more about this. Doesn't really work properly yet.
 (use-package citar
 :config
 (setq org-cite-insert-processor 'citar
-        org-cite-follow-processor 'citar
-        org-cite-activate-processor 'citar)
+      org-cite-follow-processor 'citar
+      org-cite-activate-processor 'citar)
 )
 (use-package citar-embark)
 (use-package parsebib)
 (use-package citeproc)
+#+END_SRC
+
+** Line + Word Wrap
+
+#+BEGIN_SRC emacs-lisp
+;;(use-package adaptive-wrap)
+;;(global-visual-line-mode)
 #+END_SRC
