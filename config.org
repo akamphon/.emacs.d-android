@@ -210,6 +210,9 @@ File manager, accessing email, bla bla bla
 )
 
  (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
+ (general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
+ (general-nmap org-mode-map ", p" '(org-latex-export-to-pdf :which-key "Org export latex buffer to pdf"))
+ (general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
 #+END_SRC
 
 ** Completion?
