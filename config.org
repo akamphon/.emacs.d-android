@@ -33,9 +33,12 @@
   (add-hook 'org-mode-hook #'visual-line-mode)
 )
 (use-package org-contrib)
-(use-package org-bullets
+(use-package org-superstar
+  :straight (org-superstar
+    :host github
+    :repo "integral-dw/org-superstar-mode")
   :config
-  (add-hook 'org-mode-hook #'org-bullets-mode)
+  (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
 )
 #+END_SRC
 
