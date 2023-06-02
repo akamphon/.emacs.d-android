@@ -23,6 +23,7 @@
 
 ** Org 
 #+BEGIN_SRC emacs-lisp
+(setq straight-use-package-by-default t)
 (use-package org
   :config
   (setq org-src-fontify-natively t
@@ -42,25 +43,9 @@
 )
 #+END_SRC
 
-** *NOT* setting up package.el
-
-#+BEGIN_SRC emacs-lisp
-;; ;;(add-to-list 'load-path "/usr/share/emacs/site-lisp")
-;; (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e/")
-;; ;; Set up package.el to work with MELPA
-;; (require 'package)
-;; (add-to-list 'package-archives
-;;              '("melpa" . "https://melpa.org/packages/"))
-;; ;;(package-initialize)
-;; ;;(package-refresh-contents)
-;; ;; ensure the packages are installed
-;; (setq use-package-always-ensure t)
-#+END_SRC
-
 ** Enable Evil
 
 #+BEGIN_SRC emacs-lisp
-(setq straight-use-package-by-default t)
 (use-package evil
   :init
   (setq evil-want-keybinding nil)
