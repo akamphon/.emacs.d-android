@@ -1,5 +1,5 @@
 #+AUTHOR: Sup Akamphon
-#+TITLE: DT's GNU Emacs Config
+#+TITLE: Sup's Emacs Config
 #+DESCRIPTION: personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
