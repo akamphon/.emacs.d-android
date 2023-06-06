@@ -77,9 +77,9 @@
 
 #+BEGIN_SRC emacs-lisp
 ;; Using garbage magic hack.
- (use-package gcmh
-   :config
-   (gcmh-mode 1))
+(use-package gcmh
+  :config
+  (gcmh-mode 1))
 ;; Setting garbage collection threshold
 (setq gc-cons-threshold 402653184
       gc-cons-percentage 0.6)
@@ -97,30 +97,30 @@
 (setq native-comp-async-report-warnings-erros nil)
 
 (use-package doom-themes
-:config
-(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-      doom-themes-enable-italic t) ; if nil, italics is universally disabled
-(load-theme 'doom-one t)
-)
+  :config
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
+  )
 
 (use-package dashboard
-:init      ;; tweak dashboard config before loading it
-(setq dashboard-set-heading-icons t)
-(setq dashboard-set-file-icons t)
-(setq dashboard-banner-logo-title "Dorkmacs")
-(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
-(setq dashboard-center-content nil) ;; set to 't' for centered content
-(setq dashboard-items '((recents . 5)
-   		     (agenda . 5 )))
-:config
-(dashboard-setup-startup-hook)
-(dashboard-modify-heading-icons '((recents . "file-text")
-   			 (bookmarks . "book"))))
+  :init      ;; tweak dashboard config before loading it
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-banner-logo-title "Dorkmacs")
+  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
+  (setq dashboard-center-content nil) ;; set to 't' for centered content
+  (setq dashboard-items '((recents . 5)
+   			  (agenda . 5 )))
+  :config
+  (dashboard-setup-startup-hook)
+  (dashboard-modify-heading-icons '((recents . "file-text")
+   				    (bookmarks . "book"))))
 
 (use-package all-the-icons
-:ensure t
-)
+  :ensure t
+  )
 #+END_SRC
 
 ** Smartparens
@@ -171,30 +171,30 @@ Get rid of menu, tool, and scroll bars.
 File manager, accessing email, bla bla bla
 
 #+BEGIN_SRC emacs-lisp
- (use-package general
-   :config
-   (general-evil-setup t))
+(use-package general
+  :config
+  (general-evil-setup t))
 
- (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-        "."     '(find-file :which-key "Find file")
-        "f f"   '(find-file :which-key "Find file")
-        "f r"   '(consult-recent-file :which-key "Recent files")
-        "f s"   '(save-buffer :which-key "Save file")
-        "f u"   '(sudo-edit-find-file :which-key "Sudo find file")
-        "f y"   '(dt/show-and-copy-buffer-path :which-key "Yank file path")
-        "f C"   '(copy-file :which-key "Copy file")
-        "f D"   '(delete-file :which-key "Delete file")
-        "f R"   '(rename-file :which-key "Rename file")
-        "f S"   '(write-file :which-key "Save file as...")
-        "f U"   '(sudo-edit :which-key "Sudo edit file")
-        "o m"   '(mu4e :which-key "mu4e mode")
-        "b b"   '(consult-buffer :which-key "Switch Buffer")
-)
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+  "."     '(find-file :which-key "Find file")
+  "f f"   '(find-file :which-key "Find file")
+  "f r"   '(consult-recent-file :which-key "Recent files")
+  "f s"   '(save-buffer :which-key "Save file")
+  "f u"   '(sudo-edit-find-file :which-key "Sudo find file")
+  "f y"   '(dt/show-and-copy-buffer-path :which-key "Yank file path")
+  "f C"   '(copy-file :which-key "Copy file")
+  "f D"   '(delete-file :which-key "Delete file")
+  "f R"   '(rename-file :which-key "Rename file")
+  "f S"   '(write-file :which-key "Save file as...")
+  "f U"   '(sudo-edit :which-key "Sudo edit file")
+  "o m"   '(mu4e :which-key "mu4e mode")
+  "b b"   '(consult-buffer :which-key "Switch Buffer")
+  )
 
- (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
- (general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
- (general-nmap org-mode-map ", p" '(org-latex-export-to-pdf :which-key "Org export latex buffer to pdf"))
- (general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
+(general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
+(general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
+(general-nmap org-mode-map ", p" '(org-latex-export-to-pdf :which-key "Org export latex buffer to pdf"))
+(general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
 #+END_SRC
 
 ** Completion?
@@ -277,7 +277,6 @@ I need to learn more about this. Doesn't really work properly yet.
   (marginalia-mode))
 
 (use-package embark
-
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -345,6 +344,42 @@ I need to learn more about this. Doesn't really work properly yet.
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
   (setq tab-always-indent 'complete))
+
+;; Add extensions
+(use-package cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; NOTE: The order matters!
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
 #+END_SRC
 
 ** Git Settings
