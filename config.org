@@ -27,12 +27,13 @@
 (use-package org
   :config
   (setq org-src-fontify-natively t
-    org-src-tab-acts-natively t
-    org-confirm-babel-evaluate nil
-    org-edit-src-content-indentation 0
-    org-highlight-latex-and-related '(native script entities))
+	org-src-tab-acts-natively t
+	org-confirm-babel-evaluate nil
+	org-edit-src-content-indentation 0
+	org-highlight-latex-and-related '(native script entities)
+	)
   (add-hook 'org-mode-hook #'visual-line-mode)
-)
+  )
 (use-package org-contrib)
 (use-package org-modern
   :config
@@ -113,11 +114,11 @@
   (setq dashboard-center-content nil) ;; set to 't' for centered content
   (setq dashboard-items '((recents . 5)
    			  (agenda . 5 )))
+  (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   :config
   (dashboard-setup-startup-hook)
   (dashboard-modify-heading-icons '((recents . "file-text")
    				    (bookmarks . "book"))))
-
 (use-package all-the-icons
   :ensure t
   )
@@ -380,6 +381,44 @@ I need to learn more about this. Doesn't really work properly yet.
   ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )
+
+;; Configure Tempel
+(use-package tempel
+  ;; Require trigger prefix before template name when completing.
+  ;; :custom
+  ;; (tempel-trigger-prefix "<")
+
+  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+         ("M-*" . tempel-insert))
+
+  :init
+
+  ;; Setup completion at point
+  (defun tempel-setup-capf ()
+    ;; Add the Tempel Capf to `completion-at-point-functions'.
+    ;; `tempel-expand' only triggers on exact matches. Alternatively use
+    ;; `tempel-complete' if you want to see all matches, but then you
+    ;; should also configure `tempel-trigger-prefix', such that Tempel
+    ;; does not trigger too often when you don't expect it. NOTE: We add
+    ;; `tempel-expand' *before* the main programming mode Capf, such
+    ;; that it will be tried first.
+    (setq-local completion-at-point-functions
+                (cons #'tempel-expand
+                      completion-at-point-functions)))
+
+  (add-hook 'conf-mode-hook 'tempel-setup-capf)
+  (add-hook 'prog-mode-hook 'tempel-setup-capf)
+  (add-hook 'text-mode-hook 'tempel-setup-capf)
+
+  ;; Optionally make the Tempel templates available to Abbrev,
+  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+  ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+  ;; (global-tempel-abbrev-mode)
+)
+
+;; Optional: Add tempel-collection.
+;; The package is young and doesn't have comprehensive coverage.
+(use-package tempel-collection)
 #+END_SRC
 
 ** Git Settings
@@ -393,9 +432,9 @@ I need to learn more about this. Doesn't really work properly yet.
 #+BEGIN_SRC emacs-lisp
  (require 'smtpmail)
  (setq message-send-mail-function 'smtpmail-send-it
-       smtpmail-smtp-user "sup@engr.tu.ac.th"
+       smtpmail-smtp-user "sappak@kku.ac.th"
        user-full-name "Sappinandana Akamphon"
-       user-mail-address "sup@engr.tu.ac.th"
+       user-mail-address "sappak@kku.ac.th"
        smtpmail-default-smtp-server "smtp.gmail.com"
        smtpmail-smtp-server "smtp.gmail.com"
        smtpmail-smtp-service 587
@@ -411,13 +450,14 @@ I need to learn more about this. Doesn't really work properly yet.
    (pinentry-start)
    (setq mu4e-confirm-quit nil
          mu4e-compose-context-policy 'always-ask)
+   (general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
 )
 #+END_SRC
 
 ** Font Settings
 
 #+BEGIN_SRC emacs-lisp
-(set-fontset-font t 'thai "Loma-11")
+(set-fontset-font t 'thai "Loma")
 (set-face-attribute 'default nil
   :font "Source Code Pro"
   :weight 'medium)
@@ -435,20 +475,42 @@ I need to learn more about this. Doesn't really work properly yet.
   :straight auctex
   :config
   (add-hook 'latex-mode-hook #'visual-line-mode)
-(general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
-(general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
-(general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
-(general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
-(setq latex-build-command "LatexMk")
-(defun latex/build ()
-  (interactive)
-  (progn
-    (let ((TeX-save-query nil))
-      (TeX-save-document (TeX-master-file)))
-    (TeX-command TeX-command-default 'TeX-master-file -1)
+  (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
+  (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
+  (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
+  (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
+  (setq latex-build-command "LatexMk"
+	TeX-parse-self t ; parse on load
+	TeX-auto-save t  ; parse on save
+	;; Use hidden directories for AUCTeX files.
+	TeX-auto-local ".auctex-auto"
+	TeX-style-local ".auctex-style"
+	TeX-source-correlate-mode t
+	TeX-source-correlate-method 'synctex
+	;; Don't start the Emacs server when correlating sources.
+	TeX-source-correlate-start-server nil
+	;; Automatically insert braces after sub/superscript in  `LaTeX-math-mode'.
+	TeX-electric-sub-and-superscript t
+	)
+  (defun latex/build ()
+    (interactive)
+    (progn
+      (let ((TeX-save-query nil))
+	(TeX-save-document (TeX-master-file)))
+      (TeX-command TeX-command-default 'TeX-master-file -1)
       )
     )
-)
+  (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+  )
+
+(use-package auctex-latexmk
+  :after latex
+  :init
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t
+	TeX-command-default "LatexMk")
+  :config
+  (auctex-latexmk-setup)
+  )
 
 #+END_SRC
 
