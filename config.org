@@ -33,12 +33,31 @@
 	org-highlight-latex-and-related '(native script entities)
 	)
   (add-hook 'org-mode-hook #'visual-line-mode)
+  (add-hook 'org-mode-hook #'smartparens-mode)
   )
 (use-package org-contrib)
 (use-package org-modern
   :config
   (add-hook 'org-mode-hook #'org-modern-mode)
+  (setq org-modern-block-name nil
+	org-modern-keyword nil)
 )
+#+END_SRC
+
+** Smartparens
+
+For parentheses and paired up things.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smartparens)
+(require 'smartparens-config)
+#+END_SRC
+
+** Recent Mode
+
+Build a list of recently accessed files
+#+BEGIN_SRC emacs-lisp
+(recentf-mode t)
 #+END_SRC
 
 ** Enable Evil
@@ -124,15 +143,6 @@
   )
 #+END_SRC
 
-** Smartparens
-
-For parentheses and paired up things.
-
-#+BEGIN_SRC emacs-lisp
-(use-package smartparens)
-(require 'smartparens-config)
-#+END_SRC
-
 ** Which-key
 
 Letting me know which keys do what.
@@ -196,6 +206,8 @@ File manager, accessing email, bla bla bla
 (general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
 (general-nmap org-mode-map ", p" '(org-latex-export-to-pdf :which-key "Org export latex buffer to pdf"))
 (general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
+(general-nmap org-mode-map ", l" '(org-latex-export-to-latex :which-key "Org export latex buffer to latex"))
+(general-nmap org-mode-map ", L" '(org-beamer-export-to-latex :which-key "Org export beamer buffer to latex"))
 #+END_SRC
 
 ** Completion?
@@ -474,7 +486,6 @@ I need to learn more about this. Doesn't really work properly yet.
 (use-package tex
   :straight auctex
   :config
-  (add-hook 'latex-mode-hook #'visual-line-mode)
   (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
   (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
   (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
@@ -501,16 +512,18 @@ I need to learn more about this. Doesn't really work properly yet.
       )
     )
   (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+  (add-hook 'LaTeX-mode-hook #'visual-line-mode)
+  (add-hook 'LaTeX-mode-hook #'smartparens-mode)
   )
 
-(use-package auctex-latexmk
-  :after latex
-  :init
-  (setq auctex-latexmk-inherit-TeX-PDF-mode t
-	TeX-command-default "LatexMk")
-  :config
-  (auctex-latexmk-setup)
-  )
+;;(use-package auctex-latexmk
+;;  :after latex
+;;  :init
+;;  (setq auctex-latexmk-inherit-TeX-PDF-mode t
+;;	TeX-command-default "LatexMk")
+;;  :config
+;;  (auctex-latexmk-setup)
+;;  )
 
 #+END_SRC
 
