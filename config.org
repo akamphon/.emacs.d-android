@@ -25,6 +25,7 @@
 #+BEGIN_SRC emacs-lisp
 (setq straight-use-package-by-default t)
 (use-package org
+
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
@@ -40,7 +41,12 @@
   :config
   (add-hook 'org-mode-hook #'org-modern-mode)
   (setq org-modern-block-name nil
-	org-modern-keyword nil)
+	org-modern-keyword nil
+	org-modern-progress nil
+	org-modern-checkbox nil
+	org-modern-timestamp nil
+	org-modern-statistics nil
+	org-modern-todo nil)
 )
 #+END_SRC
 
@@ -200,6 +206,7 @@ File manager, accessing email, bla bla bla
   "f U"   '(sudo-edit :which-key "Sudo edit file")
   "o m"   '(mu4e :which-key "mu4e mode")
   "b b"   '(consult-buffer :which-key "Switch Buffer")
+  "w w"   '(other-window :which-key "Cycle through window")
   )
 
 (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
@@ -442,19 +449,22 @@ I need to learn more about this. Doesn't really work properly yet.
 ** Email Settings
 
 #+BEGIN_SRC emacs-lisp
- (require 'smtpmail)
- (setq message-send-mail-function 'smtpmail-send-it
-       smtpmail-smtp-user "sappak@kku.ac.th"
-       user-full-name "Sappinandana Akamphon"
-       user-mail-address "sappak@kku.ac.th"
-       smtpmail-default-smtp-server "smtp.gmail.com"
-       smtpmail-smtp-server "smtp.gmail.com"
-       smtpmail-smtp-service 587
-)
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-smtp-user "sappak@kku.ac.th"
+      user-full-name "Sappinandana Akamphon"
+      user-mail-address "sappak@kku.ac.th"
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 587
+      )
 
- (use-package pinentry)
+(use-package pinentry)
 
- (straight-use-package '(mu4e :host github :repo "emacsmirror/mu4e" :files (:defaults "mu4e/*.el")))
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
+;(straight-use-package '(mu4e :host github :repo "emacsmirror/mu4e" :files (:defaults "mu4e/*.el") :pre-build (("./autogen.sh") ("ninja" "-C" "build"))))
 
  (with-eval-after-load "mu4e"
    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
@@ -546,4 +556,10 @@ I need to learn more about this. Doesn't really work properly yet.
 #+BEGIN_SRC emacs-lisp
 ;;(use-package adaptive-wrap)
 ;;(global-visual-line-mode)
+#+END_SRC
+
+** Set Default App
+
+#+BEGIN_SRC emacs-lisp
+(setq org-file-apps '(("pdf" . "zathura %s")))
 #+END_SRC
