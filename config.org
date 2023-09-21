@@ -1,5 +1,5 @@
-#+AUTHOR: Sup Akamphon
 #+TITLE: Sup's Emacs Config
+#+AUTHOR: Sup Akamphon
 #+DESCRIPTION: personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
@@ -48,6 +48,13 @@
 	org-modern-statistics nil
 	org-modern-todo nil)
 )
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (octave . t)
+   (matlab . t)))
+
+(setq inferior-octave-startup-args '("--line-editing"))
 #+END_SRC
 
 ** Smartparens
@@ -562,4 +569,21 @@ I need to learn more about this. Doesn't really work properly yet.
 
 #+BEGIN_SRC emacs-lisp
 (setq org-file-apps '(("pdf" . "zathura %s")))
+#+END_SRC
+
+** MATLAB mode
+
+#+BEGIN_SRC emacs-lisp
+;; associate .m file with the matlab-mode (major mode)
+(straight-use-package
+ '(matlab-mode
+   :host github
+   :repo "emacsmirror/matlab-mode"
+   :config
+   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
+   ;; setup matlab-shell
+   (setq matlab-shell-command "~/launch-matlab")
+   (setq matlab-shell-command-switches (list "-nodesktop"))
+   )
+ )
 #+END_SRC
