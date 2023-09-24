@@ -1,29 +1,80 @@
-#+TITLE: Sup's Emacs Config
 #+AUTHOR: Sup Akamphon
+#+TITLE: Sup's Emacs Config
 #+DESCRIPTION: personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
 
-** Setting up straight.el
+** Setting Up Elpaca
 
 #+BEGIN_SRC emacs-lisp
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-      (bootstrap-version 6))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-	(url-retrieve-synchronously
-	 "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-	 'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
+(defvar elpaca-installer-version 0.5)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; Install use-package support
+(elpaca elpaca-use-package
+  ;; Enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; Assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
+
+;; Block until current queue processed.
+(elpaca-wait)
+
+;;When installing a package which modifies a form used at the top-level
+;;(e.g. a package which adds a use-package key word),
+;;use `elpaca-wait' to block until that package has been installed/configured.
+;;For example:
+;;(use-package general :demand t)
+;;(elpaca-wait)
+
+;; Expands to: (elpaca evil (use-package evil :demand t))
+;;(use-package evil :demand t)
+
+;;Turns off elpaca-use-package-mode current declartion
+;;Note this will cause the declaration to be interpreted immediately (not deferred).
+;;Useful for configuring built-in emacs features.
+;;(use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
+
+;; Don't install anything. Defer execution of BODY
+;;(elpaca nil (message "deferred"))
 #+END_SRC
 
 ** Org 
 #+BEGIN_SRC emacs-lisp
-(setq straight-use-package-by-default t)
 (use-package org
 
   :config
@@ -62,8 +113,11 @@
 For parentheses and paired up things.
 
 #+BEGIN_SRC emacs-lisp
-(use-package smartparens)
-(require 'smartparens-config)
+(use-package smartparens
+  :defer t
+  :config
+  (require 'smartparens-config)
+  )
 #+END_SRC
 
 ** Recent Mode
@@ -151,9 +205,7 @@ Build a list of recently accessed files
   (dashboard-setup-startup-hook)
   (dashboard-modify-heading-icons '((recents . "file-text")
    				    (bookmarks . "book"))))
-(use-package all-the-icons
-  :ensure t
-  )
+(use-package all-the-icons)
 #+END_SRC
 
 ** Which-key
@@ -197,24 +249,29 @@ File manager, accessing email, bla bla bla
 #+BEGIN_SRC emacs-lisp
 (use-package general
   :config
-  (general-evil-setup t))
+  (general-evil-setup t)
 
-(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-  "."     '(find-file :which-key "Find file")
-  "f f"   '(find-file :which-key "Find file")
-  "f r"   '(consult-recent-file :which-key "Recent files")
-  "f s"   '(save-buffer :which-key "Save file")
-  "f u"   '(sudo-edit-find-file :which-key "Sudo find file")
-  "f y"   '(dt/show-and-copy-buffer-path :which-key "Yank file path")
-  "f C"   '(copy-file :which-key "Copy file")
-  "f D"   '(delete-file :which-key "Delete file")
-  "f R"   '(rename-file :which-key "Rename file")
-  "f S"   '(write-file :which-key "Save file as...")
-  "f U"   '(sudo-edit :which-key "Sudo edit file")
-  "o m"   '(mu4e :which-key "mu4e mode")
-  "b b"   '(consult-buffer :which-key "Switch Buffer")
-  "w w"   '(other-window :which-key "Cycle through window")
-  )
+  (general-create-definer sup/leader-keys
+    :states '(normal visual)
+    :keymaps 'override
+    :prefix "SPC"
+    :global-prefix "M-SPC")
+
+  (sup/leader-keys
+    "."     '(find-file :which-key "Find file")
+    "f f"   '(find-file :which-key "Find file")
+    "f r"   '(consult-recent-file :which-key "Recent files")
+    "f s"   '(save-buffer :which-key "Save file")
+    "f u"   '(sudo-edit-find-file :which-key "Sudo find file")
+    "f C"   '(copy-file :which-key "Copy file")
+    "f D"   '(delete-file :which-key "Delete file")
+    "f R"   '(rename-file :which-key "Rename file")
+    "f S"   '(write-file :which-key "Save file as...")
+    "f U"   '(sudo-edit :which-key "Sudo edit file")
+    "o m"   '(mu4e :which-key "mu4e mode")
+    "b b"   '(consult-buffer :which-key "Switch Buffer")
+    "w w"   '(other-window :which-key "Cycle through window")
+    )
 
 (general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
 (general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
@@ -222,6 +279,9 @@ File manager, accessing email, bla bla bla
 (general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
 (general-nmap org-mode-map ", l" '(org-latex-export-to-latex :which-key "Org export latex buffer to latex"))
 (general-nmap org-mode-map ", L" '(org-beamer-export-to-latex :which-key "Org export beamer buffer to latex"))
+
+ (general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
+)
 #+END_SRC
 
 ** Completion?
@@ -321,7 +381,7 @@ I need to learn more about this. Doesn't really work properly yet.
 
   :config
 
-  ;; Hide the mode line of the Embark live/completions buffers
+ ;; Hide the mode line of the Embark live/completions buffers
   (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
@@ -346,19 +406,12 @@ I need to learn more about this. Doesn't really work properly yet.
   (corfu-on-exact-match nil)     ;; Configure handling of exact matches
   (corfu-scroll-margin 5)        ;; Use scroll margin
 
-  ;; Enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
-
-  ;; Recommended: Enable Corfu globally.
-  ;; This is recommended since Dabbrev can be used globally (M-/).
-  ;; See also `corfu-exclude-modes'.
   :init
   (global-corfu-mode))
 
 ;; A few more useful configurations...
 (use-package emacs
+  :elpaca nil
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
@@ -408,49 +461,49 @@ I need to learn more about this. Doesn't really work properly yet.
   ;;(add-to-list 'completion-at-point-functions #'cape-line)
 )
 
-;; Configure Tempel
-(use-package tempel
-  ;; Require trigger prefix before template name when completing.
-  ;; :custom
-  ;; (tempel-trigger-prefix "<")
-
-  :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-         ("M-*" . tempel-insert))
-
-  :init
-
-  ;; Setup completion at point
-  (defun tempel-setup-capf ()
-    ;; Add the Tempel Capf to `completion-at-point-functions'.
-    ;; `tempel-expand' only triggers on exact matches. Alternatively use
-    ;; `tempel-complete' if you want to see all matches, but then you
-    ;; should also configure `tempel-trigger-prefix', such that Tempel
-    ;; does not trigger too often when you don't expect it. NOTE: We add
-    ;; `tempel-expand' *before* the main programming mode Capf, such
-    ;; that it will be tried first.
-    (setq-local completion-at-point-functions
-                (cons #'tempel-expand
-                      completion-at-point-functions)))
-
-  (add-hook 'conf-mode-hook 'tempel-setup-capf)
-  (add-hook 'prog-mode-hook 'tempel-setup-capf)
-  (add-hook 'text-mode-hook 'tempel-setup-capf)
-
-  ;; Optionally make the Tempel templates available to Abbrev,
-  ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-  ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-  ;; (global-tempel-abbrev-mode)
-)
-
-;; Optional: Add tempel-collection.
-;; The package is young and doesn't have comprehensive coverage.
-(use-package tempel-collection)
+ ;; Configure Tempel
+ (use-package tempel
+   ;; Require trigger prefix before template name when completing.
+   ;; :custom
+   ;; (tempel-trigger-prefix "<")
+ 
+   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+          ("M-*" . tempel-insert))
+ 
+   :init
+ 
+   ;; Setup completion at point
+   (defun tempel-setup-capf ()
+     ;; Add the Tempel Capf to `completion-at-point-functions'.
+     ;; `tempel-expand' only triggers on exact matches. Alternatively use
+     ;; `tempel-complete' if you want to see all matches, but then you
+     ;; should also configure `tempel-trigger-prefix', such that Tempel
+     ;; does not trigger too often when you don't expect it. NOTE: We add
+     ;; `tempel-expand' *before* the main programming mode Capf, such
+     ;; that it will be tried first.
+     (setq-local completion-at-point-functions
+                 (cons #'tempel-expand
+                       completion-at-point-functions)))
+ 
+   (add-hook 'conf-mode-hook 'tempel-setup-capf)
+   (add-hook 'prog-mode-hook 'tempel-setup-capf)
+   (add-hook 'text-mode-hook 'tempel-setup-capf)
+ 
+   ;; Optionally make the Tempel templates available to Abbrev,
+   ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+   ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+   ;; (global-tempel-abbrev-mode)
+ )
+ 
+ ;; Optional: Add tempel-collection.
+ ;; The package is young and doesn't have comprehensive coverage.
+ (use-package tempel-collection)
 #+END_SRC
 
 ** Git Settings
 
 #+BEGIN_SRC emacs-lisp
- (use-package magit)
+(use-package magit)
 #+END_SRC
 
 ** Email Settings
@@ -471,15 +524,12 @@ I need to learn more about this. Doesn't really work properly yet.
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
 (require 'mu4e)
 
-;(straight-use-package '(mu4e :host github :repo "emacsmirror/mu4e" :files (:defaults "mu4e/*.el") :pre-build (("./autogen.sh") ("ninja" "-C" "build"))))
-
  (with-eval-after-load "mu4e"
    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
          epa-pinentry-mode 'ask)
-   (pinentry-start)
+;;   (pinentry-start)
    (setq mu4e-confirm-quit nil
          mu4e-compose-context-policy 'always-ask)
-   (general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
 )
 #+END_SRC
 
@@ -500,13 +550,16 @@ I need to learn more about this. Doesn't really work properly yet.
 
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
-(use-package tex
-  :straight auctex
+(use-package latex
+  :elpaca (auctex :pre-build (("./autogen.sh")
+                              ("./configure"
+                               "--with-texmf-dir=$(dirname $(kpsexpand '$TEXMFHOME'))")
+                              ("make")))
   :config
-  (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
-  (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
-  (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
-  (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
+;;  (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
+;;  (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
+;;  (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
+;;  (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
   (setq latex-build-command "LatexMk"
 	TeX-parse-self t ; parse on load
 	TeX-auto-save t  ; parse on save
@@ -541,7 +594,6 @@ I need to learn more about this. Doesn't really work properly yet.
 ;;  :config
 ;;  (auctex-latexmk-setup)
 ;;  )
-
 #+END_SRC
 
 ** Bibliography Packages
@@ -575,15 +627,11 @@ I need to learn more about this. Doesn't really work properly yet.
 
 #+BEGIN_SRC emacs-lisp
 ;; associate .m file with the matlab-mode (major mode)
-(straight-use-package
- '(matlab-mode
-   :host github
-   :repo "emacsmirror/matlab-mode"
-   :config
-   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
-   ;; setup matlab-shell
-   (setq matlab-shell-command "~/launch-matlab")
-   (setq matlab-shell-command-switches (list "-nodesktop"))
-   )
- )
+;;(use-package matlab-mode
+;;   :config
+;;   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
+;;   ;; setup matlab-shell
+;;   (setq matlab-shell-command "~/launch-matlab")
+;;   (setq matlab-shell-command-switches (list "-nodesktop"))
+;; )
 #+END_SRC
