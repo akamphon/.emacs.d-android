@@ -76,7 +76,7 @@
 ** Org 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-
+  :elpaca nil
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
@@ -114,7 +114,6 @@ For parentheses and paired up things.
 
 #+BEGIN_SRC emacs-lisp
 (use-package smartparens
-  :defer t
   :config
   (require 'smartparens-config)
   )
@@ -519,7 +518,10 @@ I need to learn more about this. Doesn't really work properly yet.
       smtpmail-smtp-service 587
       )
 
-(use-package pinentry)
+(use-package pinentry
+  :init
+  (pinentry-start)
+)
 
 (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
 (require 'mu4e)
@@ -527,7 +529,6 @@ I need to learn more about this. Doesn't really work properly yet.
  (with-eval-after-load "mu4e"
    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
          epa-pinentry-mode 'ask)
-;;   (pinentry-start)
    (setq mu4e-confirm-quit nil
          mu4e-compose-context-policy 'always-ask)
 )
