@@ -97,7 +97,8 @@
 	org-modern-checkbox nil
 	org-modern-timestamp nil
 	org-modern-statistics nil
-	org-modern-todo nil)
+	org-modern-todo nil
+	org-modern-list nil)
 )
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -550,6 +551,9 @@ I need to learn more about this. Doesn't really work properly yet.
 (set-face-attribute 'fixed-pitch nil
   :font "Source Code Pro"
   :weight 'medium)
+(font-lock-add-keywords 'org-mode
+ '(("[1-9][.][ ]" . font-lock-keyword-face)
+   ("^[ \t]*\\(-\\)[ \t]" . font-lock-keyword-face)))
 #+END_SRC
 
 ** Latex Settings
