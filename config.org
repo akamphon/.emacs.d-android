@@ -635,13 +635,15 @@ I need to learn more about this. Doesn't really work properly yet.
 
 #+BEGIN_SRC emacs-lisp
 ;; associate .m file with the matlab-mode (major mode)
-;;(use-package matlab-mode
-;;   :config
-;;   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
-;;   ;; setup matlab-shell
-;;   (setq matlab-shell-command "~/launch-matlab")
-;;   (setq matlab-shell-command-switches (list "-nodesktop"))
-;; )
+(use-package matlab
+   :elpaca (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
+   :config
+   (require 'matlab)
+   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
+   ;; setup matlab-shell
+   (setq matlab-shell-command "/home/sup/MATLAB/bin/matlab")
+   (setq matlab-shell-command-switches '("-nodesktop" "-nosplash"))
+ )
 #+END_SRC
 
 ** EMMS
