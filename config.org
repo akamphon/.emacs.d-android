@@ -107,6 +107,18 @@
    (matlab . t)))
 
 (setq inferior-octave-startup-args '("--line-editing"))
+
+(eval-after-load "ox-latex"
+  '(add-to-list 'org-latex-classes
+                '("kaobook"
+                  "\\documentclass{kaobook}"
+                  ("\\chapter{%s}" . "\\chapter*{%s}")
+                  ("\\section{%s}" . "\\section*{%s}")
+                  ("\\subsection{%s}" . "\\subsection*{%s}")
+                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  )
 #+END_SRC
 
 ** Smartparens
@@ -196,7 +208,7 @@ Build a list of recently accessed files
   ;;(setq dashboard-set-heading-icons t)
   ;;(setq dashboard-set-file-icons t)
   ;;(setq dashboard-banner-logo-title "Dorkmacs")
-  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
   ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
   ;;(setq dashboard-center-content nil) ;; set to 't' for centered content
   :config
