@@ -572,10 +572,7 @@ I need to learn more about this. Doesn't really work properly yet.
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
 (use-package latex
-  :elpaca (auctex :pre-build (("./autogen.sh")
-                              ("./configure"
-                               "--with-texmf-dir=$(dirname $(kpsexpand '$TEXMFHOME'))")
-                              ("make")))
+  :elpaca auctex
   :config
   (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
   (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
