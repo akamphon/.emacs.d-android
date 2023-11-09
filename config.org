@@ -626,6 +626,10 @@ I need to learn more about this. Doesn't really work properly yet.
 (use-package citar-embark)
 (use-package parsebib)
 (use-package citeproc)
+
+(use-package oxr
+  :elpaca (oxr :repo "https://www.github.com/bdarcus/oxr")
+)
 #+END_SRC
 
 ** Line + Word Wrap
@@ -665,4 +669,10 @@ I need to learn more about this. Doesn't really work properly yet.
   (emms-player-mpd-connect)
   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
 )
+#+END_SRC
+
+** GNUS
+
+#+BEGIN_SRC emacs-lisp
+(setq gnus-select-method '(nnmaildir "Gmail" (directory "~/Maildir/KKU/")))
 #+END_SRC
