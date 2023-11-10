@@ -97,6 +97,7 @@
 	org-modern-checkbox nil
 	org-modern-timestamp nil
 	org-modern-statistics nil
+        org-modern-internal-target nil
 	org-modern-todo nil
 	org-modern-list nil)
 )
@@ -118,6 +119,18 @@
                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  )
+(eval-after-load "ox-latex"
+  '(setq org-latex-prefer-user-labels t)
+  )
+(eval-after-load "ox-latex"
+  '(defun my-latex-filter-removeOrgAutoLabels (text backend info)
+  (when (org-export-derived-backend-p backend 'latex)
+  (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)))
+  )
+(eval-after-load "ox-latex"
+   '(add-to-list 'org-export-filter-headline-functions
+              'my-latex-filter-removeOrgAutoLabels)
   )
 #+END_SRC
 
