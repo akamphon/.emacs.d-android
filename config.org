@@ -121,13 +121,14 @@
                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
   )
 (eval-after-load "ox-latex"
-  '(setq org-latex-prefer-user-labels t)
-  )
-(eval-after-load "ox-latex"
-  '(defun my-latex-filter-removeOrgAutoLabels (text backend info)
-  (when (org-export-derived-backend-p backend 'latex)
-  (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)))
-  )
+  '(setq org-latex-prefer-user-labels t
+	 org-beamer-frame-default-options "label="
+  ))
+(defun my-latex-filter-removeOrgAutoLabels (text backend info)
+     (when (org-export-derived-backend-p backend 'latex)
+       (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)
+       )
+     )
 (eval-after-load "ox-latex"
    '(add-to-list 'org-export-filter-headline-functions
               'my-latex-filter-removeOrgAutoLabels)
