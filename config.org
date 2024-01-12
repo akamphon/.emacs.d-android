@@ -100,7 +100,7 @@
         org-modern-internal-target nil
 	org-modern-todo nil
 	org-modern-list nil)
-)
+  )
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
@@ -311,7 +311,11 @@ File manager, accessing email, bla bla bla
 (general-nmap org-mode-map ", l" '(org-latex-export-to-latex :which-key "Org export latex buffer to latex"))
 (general-nmap org-mode-map ", L" '(org-beamer-export-to-latex :which-key "Org export beamer buffer to latex"))
 
- (general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
+(general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
+
+(general-nmap typst-ts-mode-map ", c" 'typst-ts-mode-compile)
+(general-nmap typst-ts-mode-map ", p" 'typst-ts-mode-preview)
+(general-nmap typst-ts-mode-map ", w" 'typst-ts-mode-watch-toggle)
 )
 #+END_SRC
 
@@ -580,7 +584,7 @@ I need to learn more about this. Doesn't really work properly yet.
   :font "Source Code Pro"
   :weight 'medium)
 (font-lock-add-keywords 'org-mode
- '(("[1-9][.)][ ]" . font-lock-keyword-face)
+ '(("^[ \t]*\\([0-9]\\)[.)][ \t]" . font-lock-keyword-face)
    ("^[ \t]*\\([-+*]\\)[ \t]" . font-lock-keyword-face)
    ("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)" 1 'org-headline-done prepend)))
 (custom-set-faces
@@ -591,7 +595,7 @@ I need to learn more about this. Doesn't really work properly yet.
   '(org-level-5 ((t (:inherit outline-5 :height 1.0))))
   (set-face-attribute 'org-document-title nil :height 2.0))
 #+END_SRC
-
+ 
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
 (use-package latex
@@ -691,5 +695,15 @@ I need to learn more about this. Doesn't really work properly yet.
   (add-to-list 'emms-player-list 'emms-player-mpd)
   (emms-player-mpd-connect)
   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
+)
+#+END_SRC
+
+** Typst
+
+#+BEGIN_SRC emacs-lisp
+(use-package typst-ts-mode
+  :elpaca (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
+  :custom
+  (typst-ts-mode-watch-options "--open")
 )
 #+END_SRC
