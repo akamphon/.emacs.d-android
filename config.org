@@ -7,7 +7,7 @@
 ** Setting Up Elpaca
 
 #+BEGIN_SRC emacs-lisp
-(defvar elpaca-installer-version 0.6)
+(defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -46,9 +46,9 @@
 
 ;; Install use-package support
 (elpaca elpaca-use-package
-  ;; Enable :elpaca use-package keyword.
+  ;; Enable :ensure use-package keyword.
   (elpaca-use-package-mode)
-  ;; Assume :elpaca t unless otherwise specified.
+  ;; Assume :ensure t unless otherwise specified.
   (setq elpaca-use-package-by-default t))
 
 ;; Block until current queue processed.
@@ -67,7 +67,7 @@
 ;;Turns off elpaca-use-package-mode current declartion
 ;;Note this will cause the declaration to be interpreted immediately (not deferred).
 ;;Useful for configuring built-in emacs features.
-;;(use-package emacs :elpaca nil :config (setq ring-bell-function #'ignore))
+;;(use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
 
 ;; Don't install anything. Defer execution of BODY
 ;;(elpaca nil (message "deferred"))
@@ -76,7 +76,7 @@
 ** Org 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :elpaca nil
+  :ensure nil
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
@@ -219,7 +219,7 @@ Build a list of recently accessed files
   )
 
 (use-package dashboard
-  :elpaca t
+  :ensure t
   :init      ;; tweak dashboard config before loading it
   ;;(setq dashboard-set-heading-icons t)
   ;;(setq dashboard-set-file-icons t)
@@ -318,6 +318,8 @@ File manager, accessing email, bla bla bla
 (general-nmap typst-ts-mode-map ", w" 'typst-ts-mode-watch-toggle)
 )
 #+END_SRC
+
+#+RESULTS:
 
 ** Completion?
 
@@ -446,7 +448,7 @@ I need to learn more about this. Doesn't really work properly yet.
 
 ;; A few more useful configurations...
 (use-package emacs
-  :elpaca nil
+  :ensure nil
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
@@ -599,7 +601,11 @@ I need to learn more about this. Doesn't really work properly yet.
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
 (use-package latex
-  :elpaca auctex
+  :ensure (auctex :pre-build (("./autogen.sh")
+			      ("./configure")
+			      ("make")
+			      )
+		  )
   :config
   (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
   (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
@@ -614,7 +620,7 @@ I need to learn more about this. Doesn't really work properly yet.
 	TeX-source-correlate-mode t
 	TeX-source-correlate-method 'synctex
 	;; Don't start the Emacs server when correlating sources.
-	TeX-source-correlate-start-server nil
+	TeX-source-correlate-start-server t
 	;; Automatically insert braces after sub/superscript in  `LaTeX-math-mode'.
 	TeX-electric-sub-and-superscript t
 	)
@@ -631,14 +637,14 @@ I need to learn more about this. Doesn't really work properly yet.
   (add-hook 'LaTeX-mode-hook #'smartparens-mode)
   )
 
-;;(use-package auctex-latexmk
-;;  :after latex
-;;  :init
-;;  (setq auctex-latexmk-inherit-TeX-PDF-mode t
-;;	TeX-command-default "LatexMk")
-;;  :config
-;;  (auctex-latexmk-setup)
-;;  )
+(use-package auctex-latexmk
+  :after latex
+  :init
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t
+	TeX-command-default "LatexMk")
+  :config
+  (auctex-latexmk-setup)
+  )
 #+END_SRC
 
 ** Bibliography Packages
@@ -655,7 +661,7 @@ I need to learn more about this. Doesn't really work properly yet.
 (use-package citeproc)
 
 (use-package oxr
-  :elpaca (oxr :repo "https://www.github.com/bdarcus/oxr")
+  :ensure (oxr :repo "https://www.github.com/bdarcus/oxr")
 )
 #+END_SRC
 
@@ -677,7 +683,7 @@ I need to learn more about this. Doesn't really work properly yet.
 #+BEGIN_SRC emacs-lisp
 ;; associate .m file with the matlab-mode (major mode)
 (use-package matlab
-   :elpaca (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
+   :ensure (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
    :config
    (require 'matlab)
    (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
@@ -690,20 +696,20 @@ I need to learn more about this. Doesn't really work properly yet.
 ** EMMS
 
 #+BEGIN_SRC emacs-lisp
-(use-package emms
-  :config
-  (add-to-list 'emms-player-list 'emms-player-mpd)
-  (emms-player-mpd-connect)
-  (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
-)
+;; (use-package emms
+;;   :config
+;;   (add-to-list 'emms-player-list 'emms-player-mpd)
+;;   (emms-player-mpd-connect)
+;;   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
+;; )
 #+END_SRC
 
 ** Typst
 
 #+BEGIN_SRC emacs-lisp
 (use-package typst-ts-mode
-  :elpaca (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
-  :custom
-  (typst-ts-mode-watch-options "--open")
+  :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
+;;  :custom
+;;  (typst-ts-mode-watch-options "--open")
 )
 #+END_SRC
