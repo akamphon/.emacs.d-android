@@ -600,19 +600,20 @@ I need to learn more about this. Doesn't really work properly yet.
  
 ** Latex Settings
 #+BEGIN_SRC emacs-lisp
-(use-package latex
+(use-package tex
   :ensure (auctex :pre-build (("./autogen.sh")
-			      ("./configure")
-			      ("make")
-			      )
+			      ("./configure" "--without-texmf-dir" "--with-lispdir=./")
+			      ("make"))
+		  :build (:not elpaca--compile-info)
+		  :files ("*.el" "doc/*.info" "etc" "images" "latex" "style")
+		  :version (lambda (_) (require 'tex-site) AUCTeX-version)
 		  )
   :config
   (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
   (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
   (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
   (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
-  (setq latex-build-command "LatexMk"
-	TeX-parse-self t ; parse on load
+  (setq TeX-parse-self t ; parse on load
 	TeX-auto-save t  ; parse on save
 	;; Use hidden directories for AUCTeX files.
 	TeX-auto-local ".auctex-auto"
