@@ -279,6 +279,7 @@ File manager, accessing email, bla bla bla
 
 #+BEGIN_SRC emacs-lisp
 (use-package general
+  :demand t
   :config
   (general-evil-setup t)
 
@@ -313,10 +314,11 @@ File manager, accessing email, bla bla bla
 
 (general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
 
-(general-nmap typst-ts-mode-map ", c" 'typst-ts-mode-compile)
+(general-nmap typst-ts-mode-map ", c" 'typst-ts-compile-and-preview)
 (general-nmap typst-ts-mode-map ", p" 'typst-ts-mode-preview)
-(general-nmap typst-ts-mode-map ", w" 'typst-ts-mode-watch-toggle)
+(general-nmap typst-ts-mode-map ", w" 'typst-ts-watch-mode)
 )
+(elpaca-wait)
 #+END_SRC
 
 #+RESULTS:
@@ -641,10 +643,10 @@ I need to learn more about this. Doesn't really work properly yet.
 (use-package auctex-latexmk
   :after latex
   :init
-  (setq auctex-latexmk-inherit-TeX-PDF-mode t
-	TeX-command-default "LatexMk")
   :config
   (auctex-latexmk-setup)
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t
+	TeX-command-default "LatexMk")
   )
 #+END_SRC
 
@@ -710,7 +712,11 @@ I need to learn more about this. Doesn't really work properly yet.
 #+BEGIN_SRC emacs-lisp
 (use-package typst-ts-mode
   :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
-;;  :custom
-;;  (typst-ts-mode-watch-options "--open")
 )
+#+END_SRC
+
+** Ledger
+
+#+BEGIN_SRC emacs-lisp
+(use-package ledger-mode)
 #+END_SRC
