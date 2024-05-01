@@ -4,6 +4,19 @@
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
 
+* Early Init
+:PROPERTIES:
+:header-args: :results silent :tangle ~/.config/emacs/early-init.el
+:END:
+
+#+BEGIN_SRC emacs-lisp
+(setq package-enable-at-startup nil)
+#+END_SRC
+
+* Init file
+:PROPERTIES:
+:header-args :results silent :tangle ~/.config/emacs/init.el
+:END:
 ** Setting Up Elpaca
 
 #+BEGIN_SRC emacs-lisp

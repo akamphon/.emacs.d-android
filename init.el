@@ -1,7 +1,620 @@
-(add-to-list 'load-path "~/.config/emacs/elpaca/builds/org")
-;;(add-to-list 'load-path "~/.config/emacs/elpaca/builds/org-contrib")
-(require 'org)
-(org-babel-load-file
- (expand-file-name
-  "config.org"
-  user-emacs-directory))
+(defvar elpaca-installer-version 0.7)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; Install use-package support
+(elpaca elpaca-use-package
+  ;; Enable :ensure use-package keyword.
+  (elpaca-use-package-mode)
+  ;; Assume :ensure t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
+
+;; Block until current queue processed.
+(elpaca-wait)
+
+;;When installing a package which modifies a form used at the top-level
+;;(e.g. a package which adds a use-package key word),
+;;use `elpaca-wait' to block until that package has been installed/configured.
+;;For example:
+;;(use-package general :demand t)
+;;(elpaca-wait)
+
+;; Expands to: (elpaca evil (use-package evil :demand t))
+;;(use-package evil :demand t)
+
+;;Turns off elpaca-use-package-mode current declartion
+;;Note this will cause the declaration to be interpreted immediately (not deferred).
+;;Useful for configuring built-in emacs features.
+;;(use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+
+;; Don't install anything. Defer execution of BODY
+;;(elpaca nil (message "deferred"))
+
+(use-package org
+  :ensure nil
+  :config
+  (setq org-src-fontify-natively t
+	org-src-tab-acts-natively t
+	org-confirm-babel-evaluate nil
+	org-edit-src-content-indentation 0
+	org-highlight-latex-and-related '(native script entities)
+	)
+  (add-hook 'org-mode-hook #'visual-line-mode)
+  (add-hook 'org-mode-hook #'smartparens-mode)
+  )
+(use-package org-contrib)
+(use-package org-modern
+  :config
+  (add-hook 'org-mode-hook #'org-modern-mode)
+  (setq org-modern-block-name nil
+	org-modern-keyword nil
+	org-modern-progress nil
+	org-modern-checkbox nil
+	org-modern-timestamp nil
+	org-modern-statistics nil
+        org-modern-internal-target nil
+	org-modern-todo nil
+	org-modern-list nil)
+  )
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (octave . t)
+   (matlab . t)))
+
+(setq inferior-octave-startup-args '("--line-editing"))
+
+(eval-after-load "ox-latex"
+  '(add-to-list 'org-latex-classes
+                '("kaobook"
+                  "\\documentclass{kaobook}"
+                  ("\\chapter{%s}" . "\\chapter*{%s}")
+                  ("\\section{%s}" . "\\section*{%s}")
+                  ("\\subsection{%s}" . "\\subsection*{%s}")
+                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  )
+(eval-after-load "ox-latex"
+  '(setq org-latex-prefer-user-labels t
+	 org-beamer-frame-default-options "label="
+         org-latex-pdf-process '("arara -w %f")
+	 org-latex-remove-logfiles nil
+  ))
+(defun my-latex-filter-removeOrgAutoLabels (text backend info)
+     (when (org-export-derived-backend-p backend 'latex)
+       (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)
+       )
+     )
+(eval-after-load "ox-latex"
+   '(add-to-list 'org-export-filter-headline-functions
+              'my-latex-filter-removeOrgAutoLabels)
+  )
+
+(use-package smartparens
+  :config
+  (require 'smartparens-config)
+  )
+
+(recentf-mode t)
+
+(use-package evil
+  :init
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1)
+)
+
+(use-package evil-collection
+:config
+(evil-collection-init)
+)
+
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1)
+)
+
+(use-package evil-snipe
+  :commands evil-snipe-local-mode evil-snipe-override-local-mode
+  :hook (doom-first-input . evil-snipe-override-mode)
+  :hook (doom-first-input . evil-snipe-mode)
+  :init
+  (setq evil-snipe-smart-case t
+        evil-snipe-scope 'line
+        evil-snipe-repeat-scope 'visible
+        evil-snipe-char-fold t)
+)
+
+;; Using garbage magic hack.
+(use-package gcmh
+  :config
+  (gcmh-mode 1))
+;; Setting garbage collection threshold
+(setq gc-cons-threshold 402653184
+      gc-cons-percentage 0.6)
+
+;; Profile emacs startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+
+;; Silence compiler warnings as they can be pretty disruptive
+(setq native-comp-async-report-warnings-errors nil)
+
+(use-package doom-themes
+  :config
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+	doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-one t)
+  )
+
+(use-package dashboard
+  :ensure t
+  :init      ;; tweak dashboard config before loading it
+  ;;(setq dashboard-set-heading-icons t)
+  ;;(setq dashboard-set-file-icons t)
+  ;;(setq dashboard-banner-logo-title "Dorkmacs")
+  (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  ;;(setq dashboard-startup-banner "~/.emacs.d/emacs-dash.png")  ;; use custom image as banner
+  ;;(setq dashboard-center-content nil) ;; set to 't' for centered content
+  :config
+  (setq dashboard-items '((recents . 5)
+   			  (agenda . 5 )))
+  ;;(setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+  (dashboard-modify-heading-icons '((recents . "file-text")
+   				    (bookmarks . "book")))
+   (dashboard-setup-startup-hook))
+(use-package all-the-icons)
+
+(use-package which-key
+   :init
+   (setq which-key-side-window-location 'bottom
+         which-key-sort-order #'which-key-key-order-alpha
+         which-key-sort-uppercase-first nil
+         which-key-add-column-padding 1
+         which-key-max-display-columns nil
+         which-key-min-display-lines 6
+         which-key-side-window-slot -10
+         which-key-side-window-max-height 0.25
+         which-key-idle-delay 0.8
+         which-key-max-description-length 25
+         which-key-allow-imprecise-window-fit t
+         which-key-separator " → " )
+   :config
+   (which-key-mode)
+)
+
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+(use-package general
+  :demand t
+  :config
+  (general-evil-setup t)
+
+  (general-create-definer sup/leader-keys
+    :states '(normal visual)
+    :keymaps 'override
+    :prefix "SPC"
+    :global-prefix "M-SPC")
+
+  (sup/leader-keys
+    "."     '(find-file :which-key "Find file")
+    "f f"   '(find-file :which-key "Find file")
+    "f r"   '(consult-recent-file :which-key "Recent files")
+    "f s"   '(save-buffer :which-key "Save file")
+    "f u"   '(sudo-edit-find-file :which-key "Sudo find file")
+    "f C"   '(copy-file :which-key "Copy file")
+    "f D"   '(delete-file :which-key "Delete file")
+    "f R"   '(rename-file :which-key "Rename file")
+    "f S"   '(write-file :which-key "Save file as...")
+    "f U"   '(sudo-edit :which-key "Sudo edit file")
+    "o m"   '(mu4e :which-key "mu4e mode")
+    "b b"   '(consult-buffer :which-key "Switch Buffer")
+    "w w"   '(other-window :which-key "Cycle through window")
+    )
+
+(general-nmap org-mode-map ", e" '(org-export-dispatch :which-key "Org Export Dispatch"))
+(general-nmap org-mode-map ", x" '(org-toggle-checkbox :which-key "Org Toggle Checkbox"))
+(general-nmap org-mode-map ", p" '(org-latex-export-to-pdf :which-key "Org export latex buffer to pdf"))
+(general-nmap org-mode-map ", P" '(org-beamer-export-to-pdf :which-key "Org export beamer buffer to pdf"))
+(general-nmap org-mode-map ", l" '(org-latex-export-to-latex :which-key "Org export latex buffer to latex"))
+(general-nmap org-mode-map ", L" '(org-beamer-export-to-latex :which-key "Org export beamer buffer to latex"))
+
+(general-nmap mu4e-compose-mode-map ", a" '(mail-add-attachment :which-key "Add attachment"))
+
+(general-nmap typst-ts-mode-map ", c" 'typst-ts-compile-and-preview)
+(general-nmap typst-ts-mode-map ", p" 'typst-ts-mode-preview)
+(general-nmap typst-ts-mode-map ", w" 'typst-ts-watch-mode)
+)
+(elpaca-wait)
+
+(use-package vertico
+:init
+(vertico-mode)
+)
+
+;; Optionally use the `orderless' completion style.
+(use-package orderless
+  :init
+  ;; Configure a custom style dispatcher (see the Consult wiki)
+  ;; (setq orderless-style-dispatchers '(+orderless-dispatch)
+  ;;       orderless-component-separator #'orderless-escapable-split-on-space)
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles . (partial-completion))))))
+
+(use-package consult
+  ;; Replace bindings. Lazily loaded due by `use-package'.
+  :bind (;; C-c bindings in `mode-specific-map'
+         ("C-c M-x" . consult-mode-command)
+         ("C-c h" . consult-history)
+         ("C-c k" . consult-kmacro)
+         ("C-c m" . consult-man)
+         ("C-c i" . consult-info)
+         ([remap Info-search] . consult-info)
+         ;; C-x bindings in `ctl-x-map'
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings in `goto-map'
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings in `search-map'
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+)
+
+(use-package marginalia
+  :config
+  (marginalia-mode))
+
+(use-package embark
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+ ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
+
+(use-package corfu
+  ;; Optional customizations
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-separator ?\s)          ;; Orderless field separator
+  (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+  (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+  (corfu-preview-current nil)    ;; Disable current candidate preview
+  (corfu-preselect 'prompt)      ;; Preselect the prompt
+  (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+  (corfu-scroll-margin 5)        ;; Use scroll margin
+
+  :init
+  (global-corfu-mode))
+
+;; A few more useful configurations...
+(use-package emacs
+  :ensure nil
+  :init
+  ;; TAB cycle if there are only few candidates
+  (setq completion-cycle-threshold 3)
+
+  ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
+  ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
+  ;; (setq read-extended-command-predicate
+  ;;       #'command-completion-default-include-p)
+
+  ;; Enable indentation+completion using the TAB key.
+  ;; `completion-at-point' is often bound to M-TAB.
+  (setq tab-always-indent 'complete))
+
+;; Add extensions
+(use-package cape
+  ;; Bind dedicated completion commands
+  ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  ;; Add `completion-at-point-functions', used by `completion-at-point'.
+  ;; NOTE: The order matters!
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block)
+  ;;(add-to-list 'completion-at-point-functions #'cape-history)
+  ;;(add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
+  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;;(add-to-list 'completion-at-point-functions #'cape-line)
+)
+
+ ;; Configure Tempel
+ (use-package tempel
+   ;; Require trigger prefix before template name when completing.
+   ;; :custom
+   ;; (tempel-trigger-prefix "<")
+ 
+   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+          ("M-*" . tempel-insert))
+ 
+   :init
+ 
+   ;; Setup completion at point
+   (defun tempel-setup-capf ()
+     ;; Add the Tempel Capf to `completion-at-point-functions'.
+     ;; `tempel-expand' only triggers on exact matches. Alternatively use
+     ;; `tempel-complete' if you want to see all matches, but then you
+     ;; should also configure `tempel-trigger-prefix', such that Tempel
+     ;; does not trigger too often when you don't expect it. NOTE: We add
+     ;; `tempel-expand' *before* the main programming mode Capf, such
+     ;; that it will be tried first.
+     (setq-local completion-at-point-functions
+                 (cons #'tempel-expand
+                       completion-at-point-functions)))
+ 
+   (add-hook 'conf-mode-hook 'tempel-setup-capf)
+   (add-hook 'prog-mode-hook 'tempel-setup-capf)
+   (add-hook 'text-mode-hook 'tempel-setup-capf)
+ 
+   ;; Optionally make the Tempel templates available to Abbrev,
+   ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+   ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+   ;; (global-tempel-abbrev-mode)
+ )
+ 
+ ;; Optional: Add tempel-collection.
+ ;; The package is young and doesn't have comprehensive coverage.
+ (use-package tempel-collection)
+
+(use-package magit)
+
+(require 'smtpmail)
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-smtp-user "sappak@kku.ac.th"
+      user-full-name "Sappinandana Akamphon"
+      user-mail-address "sappak@kku.ac.th"
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 587
+      )
+
+(use-package pinentry
+  :init
+  (pinentry-start)
+  )
+
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
+(with-eval-after-load "mu4e"
+  (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
+        epa-pinentry-mode 'ask
+	mu4e-confirm-quit nil
+        mu4e-compose-context-policy 'always-ask)
+  )
+
+(set-fontset-font t 'thai "Loma")
+(set-face-attribute 'default nil
+  :font "Source Code Pro"
+  :weight 'medium)
+(set-face-attribute 'variable-pitch nil
+  :font "Source Code Pro"
+  :weight 'medium)
+(set-face-attribute 'fixed-pitch nil
+  :font "Source Code Pro"
+  :weight 'medium)
+(font-lock-add-keywords 'org-mode
+ '(("^[ \t]*\\([0-9]\\)[.)][ \t]" . font-lock-keyword-face)
+   ("^[ \t]*\\([-+*]\\)[ \t]" . font-lock-keyword-face)
+   ("^[ \t]*\\(?:[-+*]\\|[0-9]+[).]\\)[ \t]+\\(\\(?:\\[@\\(?:start:\\)?[0-9]+\\][ \t]*\\)?\\[\\(?:X\\|\\([0-9]+\\)/\\2\\)\\][^\n]*\n\\)" 1 'org-headline-done prepend)))
+(custom-set-faces
+  '(org-level-1 ((t (:inherit outline-1 :height 1.2))))
+  '(org-level-2 ((t (:inherit outline-2 :height 1.1))))
+  '(org-level-3 ((t (:inherit outline-3 :height 1.0))))
+  '(org-level-4 ((t (:inherit outline-4 :height 1.0))))
+  '(org-level-5 ((t (:inherit outline-5 :height 1.0))))
+  (set-face-attribute 'org-document-title nil :height 2.0))
+
+(use-package tex
+  :ensure (auctex :pre-build (("./autogen.sh")
+			      ("./configure" "--without-texmf-dir" "--with-lispdir=./")
+			      ("make"))
+		  :build (:not elpaca--compile-info)
+		  :files ("*.el" "doc/*.info" "etc" "images" "latex" "style")
+		  :version (lambda (_) (require 'tex-site) AUCTeX-version)
+		  )
+  :config
+  (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
+  (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
+  (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
+  (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
+  (setq TeX-parse-self t ; parse on load
+	TeX-auto-save t  ; parse on save
+	;; Use hidden directories for AUCTeX files.
+	TeX-auto-local ".auctex-auto"
+	TeX-style-local ".auctex-style"
+	TeX-source-correlate-mode t
+	TeX-source-correlate-method 'synctex
+	;; Don't start the Emacs server when correlating sources.
+	TeX-source-correlate-start-server t
+	;; Automatically insert braces after sub/superscript in  `LaTeX-math-mode'.
+	TeX-electric-sub-and-superscript t
+	)
+  (defun latex/build ()
+    (interactive)
+    (progn
+      (let ((TeX-save-query nil))
+	(TeX-save-document (TeX-master-file)))
+      (TeX-command TeX-command-default 'TeX-master-file -1)
+      )
+    )
+  (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+  (add-hook 'LaTeX-mode-hook #'visual-line-mode)
+  (add-hook 'LaTeX-mode-hook #'smartparens-mode)
+  )
+
+(use-package auctex-latexmk
+  :after latex
+  :init
+  :config
+  (auctex-latexmk-setup)
+  (setq auctex-latexmk-inherit-TeX-PDF-mode t
+	TeX-command-default "LatexMk")
+  )
+
+(use-package citar
+:config
+(setq org-cite-insert-processor 'citar
+      org-cite-follow-processor 'citar
+      org-cite-activate-processor 'citar)
+)
+(use-package citar-embark)
+(use-package parsebib)
+(use-package citeproc)
+
+(use-package oxr
+  :ensure (oxr :repo "https://www.github.com/bdarcus/oxr")
+)
+
+;;(use-package adaptive-wrap)
+;;(global-visual-line-mode)
+
+(setq org-file-apps '(("pdf" . "zathura %s")))
+
+;; associate .m file with the matlab-mode (major mode)
+(use-package matlab
+   :ensure (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
+   :config
+   (require 'matlab)
+   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
+   ;; setup matlab-shell
+   (setq matlab-shell-command "/home/sup/MATLAB/bin/matlab")
+   (setq matlab-shell-command-switches '("-nodesktop" "-nosplash"))
+ )
+
+;; (use-package emms
+;;   :config
+;;   (add-to-list 'emms-player-list 'emms-player-mpd)
+;;   (emms-player-mpd-connect)
+;;   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
+;; )
+
+(use-package typst-ts-mode
+  :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
+)
+
+(use-package ledger-mode)
