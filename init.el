@@ -64,7 +64,8 @@
 ;;(elpaca nil (message "deferred"))
 
 (use-package org
-  :ensure nil
+  :ensure (:autoloads "org-loaddefs.el")
+  :defer t
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t

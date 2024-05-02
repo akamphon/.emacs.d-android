@@ -3,6 +3,7 @@
 #+DESCRIPTION: personal Emacs config.
 #+STARTUP: showeverything
 #+OPTIONS: num:nil ^:{}
+#+PROPERTY: header-args :tangle yes :results silent :noweb yes :mkdirp yes
 
 * Early Init
 :PROPERTIES:
@@ -14,9 +15,6 @@
 #+END_SRC
 
 * Init file
-:PROPERTIES:
-:header-args :results silent :tangle ~/.config/emacs/init.el
-:END:
 ** Setting Up Elpaca
 
 #+BEGIN_SRC emacs-lisp
@@ -89,7 +87,8 @@
 ** Org 
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :ensure nil
+  :ensure (:autoloads "org-loaddefs.el")
+  :defer t
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
