@@ -1,1 +1,2 @@
+rm init.el early-init.el
 emacs --batch -l org init.org -f org-babel-tangle

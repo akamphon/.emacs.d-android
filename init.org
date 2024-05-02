@@ -11,7 +11,11 @@
 :END:
 
 #+BEGIN_SRC emacs-lisp
-(setq package-enable-at-startup nil)
+(setq package-enable-at-startup nil
+      inhibit-default-init nil
+      native-comp-async-report-warnings-errors nil
+)
+(add-to-list 'load-path "~/.config/emacs/elpaca/builds/org")
 #+END_SRC
 
 * Init file
@@ -84,11 +88,62 @@
 ;;(elpaca nil (message "deferred"))
 #+END_SRC
 
-** Org 
+** Smartparens
+
+For parentheses and paired up things.
+
+#+BEGIN_SRC emacs-lisp
+(use-package smartparens
+  :config
+  (require 'smartparens-config)
+  )
+#+END_SRC
+
+** Recent Mode
+
+Build a list of recently accessed files
+#+BEGIN_SRC emacs-lisp
+(recentf-mode t)
+#+END_SRC
+
+** Enable Evil
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil
+  :init
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1)
+)
+
+(use-package evil-collection
+:config
+(evil-collection-init)
+)
+
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1)
+)
+
+(use-package evil-snipe
+  :commands evil-snipe-local-mode evil-snipe-override-local-mode
+  :hook (doom-first-input . evil-snipe-override-mode)
+  :hook (doom-first-input . evil-snipe-mode)
+  :init
+  (setq evil-snipe-smart-case t
+        evil-snipe-scope 'line
+        evil-snipe-repeat-scope 'visible
+        evil-snipe-char-fold t)
+)
+
+#+END_SRC
+
+** Org
+
 #+BEGIN_SRC emacs-lisp
 (use-package org
-  :ensure (:autoloads "org-loaddefs.el")
-  :defer t
+  :ensure (:wait t)
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
@@ -149,57 +204,6 @@
   )
 #+END_SRC
 
-** Smartparens
-
-For parentheses and paired up things.
-
-#+BEGIN_SRC emacs-lisp
-(use-package smartparens
-  :config
-  (require 'smartparens-config)
-  )
-#+END_SRC
-
-** Recent Mode
-
-Build a list of recently accessed files
-#+BEGIN_SRC emacs-lisp
-(recentf-mode t)
-#+END_SRC
-
-** Enable Evil
-
-#+BEGIN_SRC emacs-lisp
-(use-package evil
-  :init
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1)
-)
-
-(use-package evil-collection
-:config
-(evil-collection-init)
-)
-
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1)
-)
-
-(use-package evil-snipe
-  :commands evil-snipe-local-mode evil-snipe-override-local-mode
-  :hook (doom-first-input . evil-snipe-override-mode)
-  :hook (doom-first-input . evil-snipe-mode)
-  :init
-  (setq evil-snipe-smart-case t
-        evil-snipe-scope 'line
-        evil-snipe-repeat-scope 'visible
-        evil-snipe-char-fold t)
-)
-
-#+END_SRC
-
 ** Tuning emacs's (or is it emacs') performance
 
 #+BEGIN_SRC emacs-lisp
@@ -219,9 +223,6 @@ Build a list of recently accessed files
                              (float-time
                               (time-subtract after-init-time before-init-time)))
                      gcs-done)))
-
-;; Silence compiler warnings as they can be pretty disruptive
-(setq native-comp-async-report-warnings-errors nil)
 
 (use-package doom-themes
   :config

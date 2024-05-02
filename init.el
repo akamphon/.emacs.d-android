@@ -63,9 +63,43 @@
 ;; Don't install anything. Defer execution of BODY
 ;;(elpaca nil (message "deferred"))
 
+(use-package smartparens
+  :config
+  (require 'smartparens-config)
+  )
+
+(recentf-mode t)
+
+(use-package evil
+  :init
+  (setq evil-want-keybinding nil)
+  :config
+  (evil-mode 1)
+)
+
+(use-package evil-collection
+:config
+(evil-collection-init)
+)
+
+(use-package evil-surround
+  :config
+  (global-evil-surround-mode 1)
+)
+
+(use-package evil-snipe
+  :commands evil-snipe-local-mode evil-snipe-override-local-mode
+  :hook (doom-first-input . evil-snipe-override-mode)
+  :hook (doom-first-input . evil-snipe-mode)
+  :init
+  (setq evil-snipe-smart-case t
+        evil-snipe-scope 'line
+        evil-snipe-repeat-scope 'visible
+        evil-snipe-char-fold t)
+)
+
 (use-package org
-  :ensure (:autoloads "org-loaddefs.el")
-  :defer t
+  :ensure (:wait t)
   :config
   (setq org-src-fontify-natively t
 	org-src-tab-acts-natively t
@@ -125,41 +159,6 @@
               'my-latex-filter-removeOrgAutoLabels)
   )
 
-(use-package smartparens
-  :config
-  (require 'smartparens-config)
-  )
-
-(recentf-mode t)
-
-(use-package evil
-  :init
-  (setq evil-want-keybinding nil)
-  :config
-  (evil-mode 1)
-)
-
-(use-package evil-collection
-:config
-(evil-collection-init)
-)
-
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode 1)
-)
-
-(use-package evil-snipe
-  :commands evil-snipe-local-mode evil-snipe-override-local-mode
-  :hook (doom-first-input . evil-snipe-override-mode)
-  :hook (doom-first-input . evil-snipe-mode)
-  :init
-  (setq evil-snipe-smart-case t
-        evil-snipe-scope 'line
-        evil-snipe-repeat-scope 'visible
-        evil-snipe-char-fold t)
-)
-
 ;; Using garbage magic hack.
 (use-package gcmh
   :config
@@ -176,9 +175,6 @@
                              (float-time
                               (time-subtract after-init-time before-init-time)))
                      gcs-done)))
-
-;; Silence compiler warnings as they can be pretty disruptive
-(setq native-comp-async-report-warnings-errors nil)
 
 (use-package doom-themes
   :config
