@@ -478,6 +478,7 @@
  (use-package tempel-collection)
 
 (use-package magit)
+(use-package transient)
 
 (require 'smtpmail)
 (setq message-send-mail-function 'smtpmail-send-it
@@ -524,7 +525,7 @@
   '(org-level-3 ((t (:inherit outline-3 :height 1.0))))
   '(org-level-4 ((t (:inherit outline-4 :height 1.0))))
   '(org-level-5 ((t (:inherit outline-5 :height 1.0))))
-  (set-face-attribute 'org-document-title nil :height 2.0))
+  (set-face-attribute 'org-document-title nil :height 1.3))
 
 (use-package tex
   :ensure (auctex :pre-build (("./autogen.sh")

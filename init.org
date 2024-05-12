@@ -556,6 +556,7 @@ I need to learn more about this. Doesn't really work properly yet.
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit)
+(use-package transient)
 #+END_SRC
 
 ** Email Settings
@@ -610,7 +611,7 @@ I need to learn more about this. Doesn't really work properly yet.
   '(org-level-3 ((t (:inherit outline-3 :height 1.0))))
   '(org-level-4 ((t (:inherit outline-4 :height 1.0))))
   '(org-level-5 ((t (:inherit outline-5 :height 1.0))))
-  (set-face-attribute 'org-document-title nil :height 2.0))
+  (set-face-attribute 'org-document-title nil :height 1.3))
 #+END_SRC
  
 ** Latex Settings
