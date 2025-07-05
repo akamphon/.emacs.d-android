@@ -1,4 +1,4 @@
-(defvar elpaca-installer-version 0.8)
+(defvar elpaca-installer-version 0.11)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -100,18 +100,18 @@
         evil-snipe-char-fold t)
 )
 
-(use-package org
-  :ensure (:wait t)
-  :config
-  (setq org-src-fontify-natively t
-	org-src-tab-acts-natively t
-	org-confirm-babel-evaluate nil
-	org-edit-src-content-indentation 0
-	org-highlight-latex-and-related '(native script entities)
-	)
-  (add-hook 'org-mode-hook #'visual-line-mode)
-  (add-hook 'org-mode-hook #'smartparens-mode)
-  )
+;; (use-package org
+;;   :ensure (:wait t)
+;;   :config
+;;   (setq org-src-fontify-natively t
+;; 	org-src-tab-acts-natively t
+;; 	org-confirm-babel-evaluate nil
+;; 	org-edit-src-content-indentation 0
+;; 	org-highlight-latex-and-related '(native script entities)
+;; 	)
+;;  (add-hook 'org-mode-hook #'visual-line-mode)
+;;  (add-hook 'org-mode-hook #'smartparens-mode)
+;;  )
 (use-package org-contrib)
 (use-package org-modern
   :config
@@ -126,43 +126,43 @@
 	org-modern-todo nil
 	org-modern-list nil)
   )
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((python . t)
-   (octave . t)
-   (matlab . t)))
-
-(setq inferior-octave-startup-args '("--line-editing"))
-
-(eval-after-load "ox-latex"
-  '(add-to-list 'org-latex-classes
-                '("kaobook"
-                  "\\documentclass{kaobook}"
-                  ("\\chapter{%s}" . "\\chapter*{%s}")
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  )
-(eval-after-load "ox-latex"
-  '(setq org-latex-prefer-user-labels t
-	 org-beamer-frame-default-options "label="
-         org-latex-pdf-process '("arara -w %f")
-	 org-latex-remove-logfiles nil
-  ))
-(defun my-latex-filter-removeOrgAutoLabels (text backend info)
-     (when (org-export-derived-backend-p backend 'latex)
-       (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)
-       )
-     )
-(eval-after-load "ox-latex"
-   '(add-to-list 'org-export-filter-headline-functions
-              'my-latex-filter-removeOrgAutoLabels)
-  )
-(use-package ox-typst
-  :ensure (ox-typst :repo "https://github.com/jmpunkt/ox-typst")
-  )
+;; (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((python . t)
+;;    (octave . t)
+;;    (matlab . t)))
+;; 
+;; (setq inferior-octave-startup-args '("--line-editing"))
+;; 
+;; (eval-after-load "ox-latex"
+;;   '(add-to-list 'org-latex-classes
+;;                 '("kaobook"
+;;                   "\\documentclass{kaobook}"
+;;                   ("\\chapter{%s}" . "\\chapter*{%s}")
+;;                   ("\\section{%s}" . "\\section*{%s}")
+;;                   ("\\subsection{%s}" . "\\subsection*{%s}")
+;;                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;;                   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;;                   ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+;;   )
+;; (eval-after-load "ox-latex"
+;;   '(setq org-latex-prefer-user-labels t
+;; 	 org-beamer-frame-default-options "label="
+;;          org-latex-pdf-process '("arara -w %f")
+;; 	 org-latex-remove-logfiles nil
+;;   ))
+;; (defun my-latex-filter-removeOrgAutoLabels (text backend info)
+;;      (when (org-export-derived-backend-p backend 'latex)
+;;        (replace-regexp-in-string "\\\\label{sec:org[a-f0-9]+}\n" "" text)
+;;        )
+;;      )
+;; (eval-after-load "ox-latex"
+;;    '(add-to-list 'org-export-filter-headline-functions
+;;               'my-latex-filter-removeOrgAutoLabels)
+;;   )
+;; (use-package ox-typst
+;;   :ensure (ox-typst :repo "https://github.com/jmpunkt/ox-typst")
+;;   )
 
 ;; Using garbage magic hack.
 (use-package gcmh
@@ -229,6 +229,9 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
+(setq overriding-text-conversion-style nil)
+(global-set-key (kbd "<volume-up>") 'execute-extended-command)
+(global-set-key (kbd "<volume-down>") 'Control-prefix)
 
 (use-package general
   :demand t
@@ -392,70 +395,60 @@
 )
 
  ;; Configure Tempel
- (use-package tempel
-   ;; Require trigger prefix before template name when completing.
-   ;; :custom
-   ;; (tempel-trigger-prefix "<")
- 
-   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-          ("M-*" . tempel-insert))
- 
-   :init
- 
-   ;; Setup completion at point
-   (defun tempel-setup-capf ()
-     ;; Add the Tempel Capf to `completion-at-point-functions'.
-     ;; `tempel-expand' only triggers on exact matches. Alternatively use
-     ;; `tempel-complete' if you want to see all matches, but then you
-     ;; should also configure `tempel-trigger-prefix', such that Tempel
-     ;; does not trigger too often when you don't expect it. NOTE: We add
-     ;; `tempel-expand' *before* the main programming mode Capf, such
-     ;; that it will be tried first.
-     (setq-local completion-at-point-functions
-                 (cons #'tempel-expand
-                       completion-at-point-functions)))
- 
-   (add-hook 'conf-mode-hook 'tempel-setup-capf)
-   (add-hook 'prog-mode-hook 'tempel-setup-capf)
-   (add-hook 'text-mode-hook 'tempel-setup-capf)
- 
-   ;; Optionally make the Tempel templates available to Abbrev,
-   ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-   ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-   ;; (global-tempel-abbrev-mode)
- )
+ ;; (use-package tempel
+ ;;   ;; Require trigger prefix before template name when completing.
+ ;;   ;; :custom
+ ;;   ;; (tempel-trigger-prefix "<")
+ ;; 
+ ;;   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+ ;;          ("M-*" . tempel-insert))
+ ;; 
+ ;;   :init
+ ;; 
+ ;;   ;; Setup completion at point
+ ;;   (defun tempel-setup-capf ()
+ ;;     ;; Add the Tempel Capf to `completion-at-point-functions'.
+ ;;     ;; `tempel-expand' only triggers on exact matches. Alternatively use
+ ;;     ;; `tempel-complete' if you want to see all matches, but then you
+ ;;     ;; should also configure `tempel-trigger-prefix', such that Tempel
+ ;;     ;; does not trigger too often when you don't expect it. NOTE: We add
+ ;;     ;; `tempel-expand' *before* the main programming mode Capf, such
+ ;;     ;; that it will be tried first.
+ ;;     (setq-local completion-at-point-functions
+ ;;                 (cons #'tempel-expand
+ ;;                       completion-at-point-functions)))
+ ;; 
+ ;;   (add-hook 'conf-mode-hook 'tempel-setup-capf)
+ ;;   (add-hook 'prog-mode-hook 'tempel-setup-capf)
+ ;;   (add-hook 'text-mode-hook 'tempel-setup-capf)
+ ;; 
+ ;;   ;; Optionally make the Tempel templates available to Abbrev,
+ ;;   ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+ ;;   ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+ ;;   ;; (global-tempel-abbrev-mode)
+ ;; )
  
  ;; Optional: Add tempel-collection.
  ;; The package is young and doesn't have comprehensive coverage.
- (use-package tempel-collection)
+ ;n (use-package tempel-collection)
 
-(use-package magit)
-(use-package transient)
+;; (use-package magit)
+;; (use-package transient)
 
-(require 'smtpmail)
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-smtp-user "sappak@kku.ac.th"
-      user-full-name "Sappinandana Akamphon"
-      user-mail-address "sappak@kku.ac.th"
-      smtpmail-default-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-service 587
-      )
-
-(use-package pinentry
-  :init
-  (pinentry-start)
-  )
-
-(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
-(require 'mu4e)
-
-(with-eval-after-load "mu4e"
-  (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
-        epa-pinentry-mode 'ask
-	mu4e-confirm-quit nil
-        mu4e-compose-context-policy 'always-ask)
-  )
+;; (require 'smtpmail)
+;; (setq message-send-mail-function 'smtpmail-send-it
+;;       smtpmail-smtp-user "sappak@kku.ac.th"
+;;       user-full-name "Sappinandana Akamphon"
+;;       user-mail-address "sappak@kku.ac.th"
+;;       smtpmail-default-smtp-server "smtp.gmail.com"
+;;       smtpmail-smtp-server "smtp.gmail.com"
+;;       smtpmail-smtp-service 587
+;;       )
+;; 
+;; (use-package pinentry
+;;   :init
+;;   (pinentry-start)
+;;   )
 
 (set-fontset-font t 'thai "Loma")
 (set-face-attribute 'default nil
@@ -479,43 +472,43 @@
   '(org-level-5 ((t (:inherit outline-5 :height 1.0))))
   (set-face-attribute 'org-document-title nil :height 1.3))
 
-(use-package tex
-  :ensure (auctex :pre-build (("./autogen.sh")
-			      ("./configure" "--without-texmf-dir" "--with-lispdir=./")
-			      ("make"))
-		  :build (:not elpaca--compile-info)
-		  :files ("*.el" "doc/*.info" "etc" "images" "latex" "style")
-		  :version (lambda (_) (require 'tex-site) AUCTeX-version)
-		  )
-  :config
-  (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
-  (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
-  (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
-  (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
-  (setq TeX-parse-self t ; parse on load
-	TeX-auto-save t  ; parse on save
-	;; Use hidden directories for AUCTeX files.
-	TeX-auto-local ".auctex-auto"
-	TeX-style-local ".auctex-style"
-	TeX-source-correlate-mode t
-	TeX-source-correlate-method 'synctex
-	;; Don't start the Emacs server when correlating sources.
-	TeX-source-correlate-start-server t
-	;; Automatically insert braces after sub/superscript in  `LaTeX-math-mode'.
-	TeX-electric-sub-and-superscript t
-	)
-  (defun latex/build ()
-    (interactive)
-    (progn
-      (let ((TeX-save-query nil))
-	(TeX-save-document (TeX-master-file)))
-      (TeX-command TeX-command-default 'TeX-master-file -1)
-      )
-    )
-  (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
-  (add-hook 'LaTeX-mode-hook #'visual-line-mode)
-  (add-hook 'LaTeX-mode-hook #'smartparens-mode)
-  )
+;; (use-package tex
+;;   :ensure (auctex :pre-build (("./autogen.sh")
+;; 			      ("./configure" "--without-texmf-dir" "--with-lispdir=./")
+;; 			      ("make"))
+;; 		  :build (:not elpaca--compile-info)
+;; 		  :files ("*.el" "doc/*.info" "etc" "images" "latex" "style")
+;; 		  :version (lambda (_) (require 'tex-site) AUCTeX-version)
+;; 		  )
+;;   :config
+;;   (general-nmap LaTeX-mode-map ", a" '(TeX-command-run-all :which-key "TeX-command-run-all"))
+;;   (general-nmap LaTeX-mode-map ", b" '(latex/build :which-key "Build with LatexMk"))
+;;   (general-nmap LaTeX-mode-map ", v" '(TeX-view :which-key "View"))
+;;   (general-nmap LaTeX-mode-map ", e" '(LaTeX-environment :which-key "LaTeX-environment"))
+;;   (setq TeX-parse-self t ; parse on load
+;; 	TeX-auto-save t  ; parse on save
+;; 	;; Use hidden directories for AUCTeX files.
+;; 	TeX-auto-local ".auctex-auto"
+;; 	TeX-style-local ".auctex-style"
+;; 	TeX-source-correlate-mode t
+;; 	TeX-source-correlate-method 'synctex
+;; 	;; Don't start the Emacs server when correlating sources.
+;; 	TeX-source-correlate-start-server t
+;; 	;; Automatically insert braces after sub/superscript in  `LaTeX-math-mode'.
+;; 	TeX-electric-sub-and-superscript t
+;; 	)
+;;   (defun latex/build ()
+;;     (interactive)
+;;     (progn
+;;       (let ((TeX-save-query nil))
+;; 	(TeX-save-document (TeX-master-file)))
+;;       (TeX-command TeX-command-default 'TeX-master-file -1)
+;;       )
+;;     )
+;;   (add-to-list 'TeX-view-program-selection '(output-pdf "Zathura"))
+;;   (add-hook 'LaTeX-mode-hook #'visual-line-mode)
+;;   (add-hook 'LaTeX-mode-hook #'smartparens-mode)
+;;   )
 
 ;; (use-package auctex-latexmk
 ;;   :after latex
@@ -526,35 +519,35 @@
 ;; 	TeX-command-default "LatexMk")
 ;;   )
 
-(use-package citar
-:config
-(setq org-cite-insert-processor 'citar
-      org-cite-follow-processor 'citar
-      org-cite-activate-processor 'citar)
-)
-(use-package citar-embark)
-(use-package parsebib)
-(use-package citeproc)
-
-(use-package oxr
-  :ensure (oxr :repo "https://www.github.com/bdarcus/oxr")
-)
+;; (use-package citar
+;; :config
+;; (setq org-cite-insert-processor 'citar
+;;       org-cite-follow-processor 'citar
+;;       org-cite-activate-processor 'citar)
+;; )
+;; (use-package citar-embark)
+;; (use-package parsebib)
+;; (use-package citeproc)
+;; 
+;; (use-package oxr
+;;   :ensure (oxr :repo "https://www.github.com/bdarcus/oxr")
+;; )
 
 ;;(use-package adaptive-wrap)
 ;;(global-visual-line-mode)
 
-(setq org-file-apps '(("pdf" . "zathura %s")))
+;; (setq org-file-apps '(("pdf" . "zathura %s")))
 
 ;; associate .m file with the matlab-mode (major mode)
-(use-package matlab
-   :ensure (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
-   :config
-   (require 'matlab)
-   (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
-   ;; setup matlab-shell
-   (setq matlab-shell-command "/home/sup/MATLAB/bin/matlab")
-   (setq matlab-shell-command-switches '("-nodesktop" "-nosplash"))
- )
+;; (use-package matlab
+;;    :ensure (matlab-mode :repo "https://git.code.sf.net/p/matlab-emacs/src")
+;;    :config
+;;    (require 'matlab)
+;;    (add-to-list 'auto-mode-alist '("\\.m$" . matlab-mode))
+;;    ;; setup matlab-shell
+;;    (setq matlab-shell-command "/home/sup/MATLAB/bin/matlab")
+;;    (setq matlab-shell-command-switches '("-nodesktop" "-nosplash"))
+;;  )
 
 ;; (use-package emms
 ;;   :config
@@ -563,8 +556,8 @@
 ;;   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
 ;; )
 
-(use-package typst-ts-mode
-  :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
-)
+;; (use-package typst-ts-mode
+;;   :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
+;; )
 
 (use-package ledger-mode)
