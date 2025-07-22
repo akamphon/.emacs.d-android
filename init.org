@@ -520,20 +520,23 @@ I need to learn more about this. Doesn't really work properly yet.
 ** Email Settings
 
 #+BEGIN_SRC emacs-lisp
-;; (require 'smtpmail)
-;; (setq message-send-mail-function 'smtpmail-send-it
-;;       smtpmail-smtp-user "sappak@kku.ac.th"
-;;       user-full-name "Sappinandana Akamphon"
-;;       user-mail-address "sappak@kku.ac.th"
-;;       smtpmail-default-smtp-server "smtp.gmail.com"
-;;       smtpmail-smtp-server "smtp.gmail.com"
-;;       smtpmail-smtp-service 587
-;;       )
-;; 
-;; (use-package pinentry
-;;   :init
-;;   (pinentry-start)
-;;   )
+  ;; (require 'smtpmail)
+  ;; (setq message-send-mail-function 'smtpmail-send-it
+  ;;       smtpmail-smtp-user "sappak@kku.ac.th"
+  ;;       user-full-name "Sappinandana Akamphon"
+  ;;       user-mail-address "sappak@kku.ac.th"
+  ;;       smtpmail-default-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-service 587
+  ;;       )
+  ;; 
+  ;; (use-package pinentry
+  ;;   :init
+  ;;   (pinentry-start)
+  ;;   )
+
+  (add-to-list 'load-path "/data/data/com.termux/files/usr/share/emacs/site-lisp/mu4e")
+  (require 'mu4e)
 #+END_SRC
 
 ** Font Settings

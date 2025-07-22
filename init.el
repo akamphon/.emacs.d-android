@@ -450,6 +450,9 @@
 ;;   (pinentry-start)
 ;;   )
 
+(add-to-list 'load-path "/data/data/com.termux/files/usr/share/emacs/site-lisp/mu4e")
+(require 'mu4e)
+
 (set-fontset-font t 'thai "Loma")
 (set-face-attribute 'default nil
   :font "Source Code Pro"
