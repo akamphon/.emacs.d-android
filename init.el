@@ -230,8 +230,6 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (setq overriding-text-conversion-style nil)
-(global-set-key (kbd "<volume-up>") 'execute-extended-command)
-(global-set-key (kbd "<volume-down>") 'Control-prefix)
 
 (use-package general
   :demand t
@@ -436,26 +434,47 @@
 ;; (use-package transient)
 
 ;; (require 'smtpmail)
-;; (setq message-send-mail-function 'smtpmail-send-it
-;;       smtpmail-smtp-user "sappak@kku.ac.th"
-;;       user-full-name "Sappinandana Akamphon"
-;;       user-mail-address "sappak@kku.ac.th"
-;;       smtpmail-default-smtp-server "smtp.gmail.com"
-;;       smtpmail-smtp-server "smtp.gmail.com"
-;;       smtpmail-smtp-service 587
-;;       )
-;; 
-;; (use-package pinentry
-;;   :init
-;;   (pinentry-start)
-;;   )
+  ;; (setq message-send-mail-function 'smtpmail-send-it
+  ;;       smtpmail-smtp-user "sappak@kku.ac.th"
+  ;;       user-full-name "Sappinandana Akamphon"
+  ;;       user-mail-address "sappak@kku.ac.th"
+  ;;       smtpmail-default-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-service 587
+  ;;       )
+  ;; 
+  (use-package pinentry
+    :init
+    (pinentry-start)
+    )
 
-(add-to-list 'load-path "/data/data/com.termux/files/usr/share/emacs/site-lisp/mu4e")
-(require 'mu4e)
+  (add-to-list 'load-path "/data/data/com.termux/files/usr/share/emacs/site-lisp/mu4e")
+  (require 'mu4e)
+
+  (with-eval-after-load "mu4e"
+    (setq mu4e-get-mail-command (format "INSIDE_EMACS=%s mbsync -a" emacs-version)
+  	epa-pinentry-mode 'ask
+  	mu4e-confirm-quit nil
+  	mu4e-compose-context-policy 'always-ask
+  	mu4e-trash-folder "/KKU/[Gmail]/Trash")
+    )
+(setf (alist-get 'trash mu4e-marks)
+      '(:char ("d" . "▼")
+              :prompt "dtrash"
+              :dyn-target (lambda (target msg) (mu4e-get-trash-folder msg))
+              ;; Here's the main difference to the regular trash mark, no +T
+              ;; before -N so the message is not marked as IMAP-deleted, unless
+              ;; it's Gmail.
+              :action (lambda (docid msg target)
+                              (mu4e--server-move docid (mu4e--mark-check-target target) "-N")
+			      )
+	      )
+      )
 
 (set-fontset-font t 'thai "Loma")
 (set-face-attribute 'default nil
   :font "Source Code Pro"
+  :height 160
   :weight 'medium)
 (set-face-attribute 'variable-pitch nil
   :font "Source Code Pro"
@@ -538,6 +557,10 @@
 
 ;;(use-package adaptive-wrap)
 ;;(global-visual-line-mode)
+(use-package valign
+  :config
+  (add-hook 'org-mode-hook #'valign-mode)
+  )
 
 ;; (setq org-file-apps '(("pdf" . "zathura %s")))
 
@@ -552,15 +575,32 @@
 ;;    (setq matlab-shell-command-switches '("-nodesktop" "-nosplash"))
 ;;  )
 
-;; (use-package emms
-;;   :config
-;;   (add-to-list 'emms-player-list 'emms-player-mpd)
-;;   (emms-player-mpd-connect)
-;;   (setq emms-player-mpd-music-directory "~/Downloads/DemSongs/")
-;; )
+(use-package emms
+  :init
+  (setq emms-player-mpd-supported-regexp "\\`http[s]?://\\|\\.\\([Mm]3[Uu]\\|[Oo][Gg][Gg]\\|[Ff][Ll][Aa][Cc]\\|[Mm][Pp]3\\|[Ww][Aa][Vv]\\|[Mm][Oo][Dd]\\|[Aa][Uu]\\|[Aa][Ii][Ff][Ff]\\|[Mm][Pp]4\\|[Ww][Ee][Bb][Mm]\\)\\'")
+  :config
+  (require 'emms-player-mpd)
+  (emms-all)
+  (emms-player-mpd-connect)
+  (setq emms-player-list '(emms-player-mpd))
+  (setq emms-player-mpd-music-directory "/sdcard/Music/")
+)
 
 ;; (use-package typst-ts-mode
 ;;   :ensure (:type git :host sourcehut :repo "meow_king/typst-ts-mode")
 ;; )
 
 (use-package ledger-mode)
+
+(use-package nov
+  :init 
+  (setq nov-text-width t)
+  :config
+  (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+      (defun my-nov-font-setup ()
+        (face-remap-add-relative 'variable-pitch :family "Merriweather" 
+                                 :height 1.0)
+	    )
+      (add-hook 'nov-mode-hook 'my-nov-font-setup)
+      (add-hook 'nov-mode-hook 'visual-line-mode)
+  )
